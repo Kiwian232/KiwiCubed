@@ -12,7 +12,8 @@ Player::Player(int playerX, int playerY, int playerZ, ChunkHandler& chunkHandler
 	
 	entityData.physicsBoundingBox = PhysicsBoundingBox(glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(0.5f, 0.5f, 0.5f));
 
-	inputHandler.RegisterMouseButtonCallback(GLFW_MOUSE_BUTTON_LEFT, std::bind(&Player::MouseButtonCallback, this));
+	inputHandler.RegisterMouseButtonCallback(GLFW_MOUSE_BUTTON_LEFT, std::bind(&Player::MouseButtonCallback, this, std::placeholders::_1));
+	inputHandler.RegisterMouseButtonCallback(GLFW_MOUSE_BUTTON_RIGHT, std::bind(&Player::MouseButtonCallback, this, std::placeholders::_1));
 }
 
 void Player::Setup(Window& window) {
@@ -20,10 +21,10 @@ void Player::Setup(Window& window) {
 	camera->Setup(window);
 	inputHandler.SetupKeyStates(window.GetWindowInstance(), std::vector<int>{GLFW_KEY_W, GLFW_KEY_A, GLFW_KEY_S, GLFW_KEY_D, GLFW_KEY_SPACE, GLFW_KEY_LEFT_SHIFT, GLFW_KEY_LEFT_CONTROL});
 
-	inputHandler.RegisterKeyCallback(GLFW_KEY_E, [&]() {
+	inputHandler.RegisterKeyCallback(GLFW_KEY_E, [&](int key) {
 		chunkHandler.Delete();
 	});
-	inputHandler.RegisterKeyCallback(GLFW_KEY_R, [&]() {
+	inputHandler.RegisterKeyCallback(GLFW_KEY_R, [&](int key) {
 		chunkHandler.GenerateWorld();
 	});
 }
@@ -78,26 +79,27 @@ void Player::QueryInputs() {
 	}
 }
 
-void Player::MouseButtonCallback() {
+void Player::MouseButtonCallback(int button) {
 	glm::ivec3 chunkPosition = glm::ivec3(0, 0, 0);
 	glm::ivec3 blockPosition = glm::ivec3(0, 0, 0);
 	bool hit = 0;
 	if (RaycastWorld(entityData.position, entityData.orientation, 500, chunkHandler, blockPosition, chunkPosition, hit)) {
-		chunkHandler.RemoveBlock(chunkPosition.x, chunkPosition.y, chunkPosition.z, blockPosition.x, blockPosition.y, blockPosition.z);
-		if (blockPosition.x == 0 || blockPosition.x == chunkSize - 1 || blockPosition.y == 0 || blockPosition.y == chunkSize - 1 || blockPosition.z == 0 || blockPosition.z == chunkSize - 1) {
-			chunkHandler.RemeshChunk(chunkPosition.x, chunkPosition.y, chunkPosition.z, false);
-			if (blockPosition.x == 0 || blockPosition.x == chunkSize - 1) {
-				chunkHandler.RemeshChunk(chunkPosition.x - 1, chunkPosition.y, chunkPosition.z, false);
+		if (button == 0) {
+			chunkHandler.RemoveBlock(chunkPosition.x, chunkPosition.y, chunkPosition.z, blockPosition.x, blockPosition.y, blockPosition.z);
+			if (blockPosition.x == 0 || blockPosition.x == chunkSize - 1 || blockPosition.y == 0 || blockPosition.y == chunkSize - 1 || blockPosition.z == 0 || blockPosition.z == chunkSize - 1) {
+				chunkHandler.RemeshChunk(chunkPosition.x, chunkPosition.y, chunkPosition.z, false);
+				if (blockPosition.x == 0 || blockPosition.x == chunkSize - 1) {
+					chunkHandler.RemeshChunk(chunkPosition.x - 1, chunkPosition.y, chunkPosition.z, false);
+				}
+				if (blockPosition.y == 0 || blockPosition.y == chunkSize - 1) {
+					chunkHandler.RemeshChunk(chunkPosition.x, chunkPosition.y - 1, chunkPosition.z, false);
+				}
+				if (blockPosition.z == 0 || blockPosition.z == chunkSize - 1) {
+					chunkHandler.RemeshChunk(chunkPosition.x, chunkPosition.y, chunkPosition.z - 1, false);
+				}
+			} else {
+				chunkHandler.RemeshChunk(chunkPosition.x, chunkPosition.y, chunkPosition.z, false);
 			}
-			if (blockPosition.y == 0 || blockPosition.y == chunkSize - 1) {
-				chunkHandler.RemeshChunk(chunkPosition.x, chunkPosition.y - 1, chunkPosition.z, false);
-			}
-			if (blockPosition.z == 0 || blockPosition.z == chunkSize - 1) {
-				chunkHandler.RemeshChunk(chunkPosition.x, chunkPosition.y, chunkPosition.z - 1, false);
-			}
-		}
-		else {
-			chunkHandler.RemeshChunk(chunkPosition.x, chunkPosition.y, chunkPosition.z, false);
 		}
 	}
 }

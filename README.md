@@ -7,3 +7,7 @@ Currently working on:
 - Chunk handling system with world class for loading, unloading and rendering.
 - Adding support for multiple block types, such as grass blocks and stone blocks, along with attributes for (future) gameplay.
 - Gameplay elements such as items, physics, and mutability of the world.
+
+## Compiling
+
+Clone the repository, and run 'meson setup builddir' in the root folder, then 'just build' to compile. Linux and Mac are unsupported as of now.

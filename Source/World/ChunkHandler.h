@@ -41,6 +41,41 @@ struct TripleHash {
     }
 };
 
+class ObservableInt {
+    private:
+        unsigned short value;
+
+    public:
+        ObservableInt(int value = 0) : value(value) {}
+
+        ObservableInt& operator=(int newValue) {
+            return AssignValue(newValue, __FILE__, __LINE__);
+        }
+
+        ObservableInt& AssignValue(int newValue, const char* file, int line) {
+            if (value != newValue) {
+                int oldValue = value;
+                value = newValue;
+                OnValueChanged(oldValue, file, line);
+            }
+            return *this;
+        }
+
+        void OnValueChanged(int oldValue, const char* file, int line) {
+            const char* filename = strrchr(file, '/');
+            if (!filename) {
+                filename = strrchr(file, '\\');
+            }
+            filename = filename ? filename + 1 : file;
+
+            std::cout << ("Value changed from " + std::to_string(oldValue) + " to " + std::to_string(value) + " at " + filename + ":" + std::to_string(line)) << std::endl;
+        }
+
+        int GetValue() const {
+            return value;
+        }
+};
+
 
 class Chunk {
     public:
@@ -85,7 +120,7 @@ class Chunk {
         bool IsEmpty();
         bool IsFull();
 
-        void DisplayImGui() const;
+        void DisplayImGui();
 
         void Delete();
     
@@ -100,7 +135,7 @@ class Chunk {
         std::vector<GLfloat> debugVisualizationVertices;
         std::vector<GLuint> debugVisualizationIndices;
     
-        unsigned short totalBlocks;
+        unsigned int totalBlocks = 0;
     
         VertexArrayObject vertexArrayObject;
         VertexBufferObject vertexBufferObject;
@@ -109,27 +144,27 @@ class Chunk {
 
 
 class ChunkHandler {
-public:
-    std::unordered_map<std::tuple<int, int, int>, Chunk, TripleHash> chunks;
+    public:
+        std::unordered_map<std::tuple<int, int, int>, Chunk, TripleHash> chunks;
 
-    ChunkHandler(World& world) : world(world) {};
-    void Delete();
+        ChunkHandler(World& world) : world(world) {};
+        void Delete();
 
-    void GenerateWorld();
+        void GenerateWorld();
 
-    Chunk& GetChunk(int chunkX, int chunkY, int chunkZ);
-    Chunk& AddChunk(int chunkX, int chunkY, int chunkZ);
-    void GenerateChunk(int chunkX, int chunkY, int chunkZ, bool debug);
-    void MeshChunk(int chunkX, int chunkY, int chunkZ);
-    void SmartGenerateAndMeshChunk(int chunkX, int chunkY, int chunkZ);
-    void ForceGenerateAndMeshChunk(int chunkX, int chunkY, int chunkZ);
-    void RemeshChunk(int chunkX, int chunkY, int chunkZ, bool updateNeighbors);
+        Chunk& GetChunk(int chunkX, int chunkY, int chunkZ);
+        Chunk& AddChunk(int chunkX, int chunkY, int chunkZ);
+        void GenerateChunk(int chunkX, int chunkY, int chunkZ, bool debug);
+        void MeshChunk(int chunkX, int chunkY, int chunkZ);
+        void SmartGenerateAndMeshChunk(int chunkX, int chunkY, int chunkZ);
+        void ForceGenerateAndMeshChunk(int chunkX, int chunkY, int chunkZ);
+        void RemeshChunk(int chunkX, int chunkY, int chunkZ, bool updateNeighbors);
 
-    void AddBlock(int chunkX, int chunkY, int chunkZ, int blockX, int blockY, int blockZ, unsigned short newBlockID);
-    void RemoveBlock(int chunkX, int chunkY, int chunkZ, int blockX, int blockY, int blockZ);
+        void AddBlock(int chunkX, int chunkY, int chunkZ, int blockX, int blockY, int blockZ, unsigned short newBlockID);
+        void RemoveBlock(int chunkX, int chunkY, int chunkZ, int blockX, int blockY, int blockZ);
 
-private:
-    World& world;
+    private:
+        World& world;
 
-    Chunk defaultChunk = Chunk(0, 0, 0);
+        Chunk defaultChunk = Chunk(0, 0, 0);
 };

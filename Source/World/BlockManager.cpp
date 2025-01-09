@@ -11,22 +11,22 @@ void BlockManager::RegisterBlockType(BlockType blockType) {
     latestBlockID++;
 }
 
-BlockType* BlockManager::GetBlockType(BlockStringID blockStringID) {
-    return &blockTypes[*GetBlockID(blockStringID)];
+BlockType BlockManager::GetBlockType(BlockStringID blockStringID) {
+    return blockTypes[GetBlockID(blockStringID)];
 }
 
-BlockType* BlockManager::GetBlockType(const char* modID, const char* blockName) {
-    return &blockTypes[*GetBlockID(modID, blockName)];
+BlockType BlockManager::GetBlockType(const char* modID, const char* blockName) {
+    return blockTypes[GetBlockID(modID, blockName)];
 }
 
-BlockType* BlockManager::GetBlockType(unsigned short blockID) {
-    return &blockTypes[blockID];
+BlockType BlockManager::GetBlockType(unsigned short blockID) {
+    return blockTypes[blockID];
 }
 
-unsigned short* BlockManager::GetBlockID(BlockStringID blockStringID) {
-    return &blockStringsToIDs[blockStringID];
+unsigned short BlockManager::GetBlockID(BlockStringID blockStringID) {
+    return blockStringsToIDs[blockStringID];
 }
 
-unsigned short* BlockManager::GetBlockID(const char* modID, const char* blockName) {
-    return &blockStringsToIDs[{modID, blockName}];
+unsigned short BlockManager::GetBlockID(const char* modID, const char* blockName) {
+    return blockStringsToIDs[{modID, blockName}];
 }

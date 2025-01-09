@@ -16,8 +16,8 @@ class Window;
 
 class InputHandler {
     public:
-        using KeyCallback = std::function<void()>;
-        using MouseButtonCallback = std::function<void()>;
+        using KeyCallback = std::function<void(int key)>;
+        using MouseButtonCallback = std::function<void(int button)>;
         using ScrollCallback = std::function<void(double offset)>;
     
         InputHandler() : window(window) {}
@@ -116,7 +116,7 @@ class InputHandler {
     
                 // If a callback is registered for this key, invoke it
                 if (keyCallbacks.find(key) != keyCallbacks.end()) {
-                    keyCallbacks[key]();
+                    keyCallbacks[key](key);
                 }
             }
             else if (action == GLFW_RELEASE) {
@@ -131,7 +131,7 @@ class InputHandler {
     
                 // If a callback is registered for this button, invoke it
                 if (mouseButtonCallbacks.find(button) != mouseButtonCallbacks.end()) {
-                    mouseButtonCallbacks[button]();
+                    mouseButtonCallbacks[button](button);
                 }
             }
             else if (action == GLFW_RELEASE) {

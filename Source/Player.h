@@ -25,7 +25,7 @@ class Player : public Entity {
 	
 		void Update();
 		void QueryInputs();
-		void MouseButtonCallback();
+		void MouseButtonCallback(int button);
 		void QueryMouseInputs();
 	
 		void SetPosition(Window* window, int playerX, int playerY, int playerZ);

@@ -88,12 +88,12 @@ void ChunkHandler::AddBlock(int chunkX, int chunkY, int chunkZ, int blockX, int 
     Chunk& chunk = GetChunk(chunkX, chunkY, chunkZ);
     Block& block = chunk.blocks[blockX][blockY][blockZ];
     if (block.IsAir() ^ (newBlockID == 0)) {
-        int curblocks = chunk.GetTotalBlocks();
+        int currentBlocks = chunk.GetTotalBlocks();
         if (newBlockID == 0) {
-            chunk.SetTotalBlocks(curblocks - 1);
+            chunk.SetTotalBlocks(currentBlocks - 1);
         }
         else {
-            chunk.SetTotalBlocks(curblocks + 1);
+            chunk.SetTotalBlocks(currentBlocks + 1);
         }
     }
     block.SetBlockID(newBlockID);

@@ -8,6 +8,7 @@ void Chunk::SetupRenderComponents() {
     indexBufferObject.SetupBuffer();
 }
 
+
 void Chunk::AllocateChunk() {
     if (!isAllocated) {
         debugVisualizationVertices = {
@@ -49,11 +50,11 @@ void Chunk::GenerateBlocks(World& world, Chunk& callerChunk, bool updateCallerCh
         return;
     }
 
-    for (int x = 0; x < chunkSize; ++x) {
-        for (int y = 0; y < chunkSize; ++y) {
-            for (int z = 0; z < chunkSize; ++z) {
-                blocks[x][y][z].GenerateBlock({static_cast<unsigned short>(x), static_cast<unsigned short>(y), static_cast<unsigned short>(z)}, chunkX, chunkY, chunkZ, chunkSize, debug);
-                if (!blocks[x][y][z].IsAir()) {
+    for (int blockX = 0; blockX < chunkSize; ++blockX) {
+        for (int blockY = 0; blockY < chunkSize; ++blockY) {
+            for (int blockZ = 0; blockZ < chunkSize; ++blockZ) {
+                blocks[blockX][blockY][blockZ].GenerateBlock(blockX, blockY, blockZ, chunkX, chunkY, chunkZ, chunkSize, debug);
+                if (blocks[blockX][blockY][blockZ].GetBlockID() != 0) {
                     totalBlocks++;
                 }
             }
@@ -103,7 +104,7 @@ void Chunk::GenerateMesh(ChunkHandler& chunkHandler, const bool remesh) {
         for (int x = 0; x < chunkSize; ++x) {
             for (int y = 0; y < chunkSize; ++y) {
                 for (int z = 0; z < chunkSize; ++z) {
-                    if (blocks[x][y][z].IsAir()) {
+                    if (blocks[x][y][z].GetBlockID() != 0) {
                         Block& block = blocks[x][y][z];
         
                         for (int direction = 0; direction < 6; ++direction) {
@@ -113,7 +114,7 @@ void Chunk::GenerateMesh(ChunkHandler& chunkHandler, const bool remesh) {
                             switch (faceDirection) {
                                 case RIGHT:
                                     if (x < chunkSize - 1) {
-                                        if (blocks[x + 1][y][z].IsAir()) {
+                                        if (blocks[x + 1][y][z].GetBlockID() == 0) {
                                             shouldAddFace = true;
                                             break;
                                         }
@@ -122,7 +123,7 @@ void Chunk::GenerateMesh(ChunkHandler& chunkHandler, const bool remesh) {
                                         break;
                                     }
                                     if (x == chunkSize - 1) {
-                                        if (positiveXChunk.blocks[0][y][z].IsAir()) {
+                                        if (positiveXChunk.blocks[0][y][z].GetBlockID() == 0) {
                                             shouldAddFace = true;
                                             break;
                                         }
@@ -130,13 +131,13 @@ void Chunk::GenerateMesh(ChunkHandler& chunkHandler, const bool remesh) {
                                     break;
                                 case LEFT:
                                     if (x > 0) {
-                                        if (blocks[x - 1][y][z].IsAir()) {
+                                        if (blocks[x - 1][y][z].GetBlockID() == 0) {
                                             shouldAddFace = true;
                                             break;
                                         }
                                     }
                                     else if (x == 0 && negativeXChunk.isGenerated) {
-                                        if (negativeXChunk.blocks[chunkSize - 1][y][z].IsAir()) {
+                                        if (negativeXChunk.blocks[chunkSize - 1][y][z].GetBlockID() == 0) {
                                             shouldAddFace = true;
                                             break;
                                         }
@@ -147,13 +148,13 @@ void Chunk::GenerateMesh(ChunkHandler& chunkHandler, const bool remesh) {
                                     break;
                                 case TOP:
                                     if (y < chunkSize - 1) {
-                                        if (blocks[x][y + 1][z].IsAir()) {
+                                        if (blocks[x][y + 1][z].GetBlockID() == 0) {
                                             shouldAddFace = true;
                                             break;
                                         }
                                     }
                                     else if (y == chunkSize - 1 && positiveYChunk.isGenerated) {
-                                        if (positiveYChunk.blocks[x][0][z].IsAir()) {
+                                        if (positiveYChunk.blocks[x][0][z].GetBlockID() == 0) {
                                             shouldAddFace = true;
                                             break;
                                         }
@@ -164,13 +165,13 @@ void Chunk::GenerateMesh(ChunkHandler& chunkHandler, const bool remesh) {
                                     break;
                                 case BOTTOM:
                                     if (y > 0) {
-                                        if (blocks[x][y - 1][z].IsAir()) {
+                                        if (blocks[x][y - 1][z].GetBlockID() == 0) {
                                             shouldAddFace = true;
                                             break;
                                         }
                                     }
                                     else if (y == 0 && negativeYChunk.isGenerated) {
-                                        if (negativeYChunk.blocks[x][chunkSize - 1][z].IsAir()) {
+                                        if (negativeYChunk.blocks[x][chunkSize - 1][z].GetBlockID() == 0) {
                                             shouldAddFace = true;
                                             break;
                                         }
@@ -181,13 +182,13 @@ void Chunk::GenerateMesh(ChunkHandler& chunkHandler, const bool remesh) {
                                     break;
                                 case BACK:
                                     if (z < chunkSize - 1) {
-                                        if (blocks[x][y][z + 1].IsAir()) {
+                                        if (blocks[x][y][z + 1].GetBlockID() == 0) {
                                             shouldAddFace = true;
                                             break;
                                         }
                                     }
                                     else if (z == chunkSize - 1 && positiveZChunk.isGenerated) {
-                                        if (positiveZChunk.blocks[x][y][0].IsAir()) {
+                                        if (positiveZChunk.blocks[x][y][0].GetBlockID() == 0) {
                                             shouldAddFace = true;
                                             break;
                                         }
@@ -198,13 +199,13 @@ void Chunk::GenerateMesh(ChunkHandler& chunkHandler, const bool remesh) {
                                     break;
                                 case FRONT:
                                     if (z > 0) {
-                                        if (blocks[x][y][z - 1].IsAir()) {
+                                        if (blocks[x][y][z - 1].GetBlockID() == 0) {
                                             shouldAddFace = true;
                                             break;
                                         }
                                     }
                                     else if (z == 0 && negativeZChunk.isGenerated) {
-                                        if (negativeZChunk.blocks[x][y][chunkSize - 1].IsAir()) {
+                                        if (negativeZChunk.blocks[x][y][chunkSize - 1].GetBlockID() == 0) {
                                             shouldAddFace = true;
                                             break;
                                         }
@@ -291,14 +292,14 @@ bool Chunk::IsFull() {
     }
 }
 
-void Chunk::DisplayImGui() const {
-    ImGui::Text("Chunk position: {%d, %d, %d}, GS: %d, Blocks: %d, Vertices: %d, Indices: %d, VBO: %d, VAO: %d, IBO %d, Memory usage: %d KB", chunkX, chunkY, chunkZ, generationStatus, totalBlocks, vertices.size(), indices.size(), vertexBufferObject.vertexBufferObjectID, vertexArrayObject.vertexArrayObjectID, indexBufferObject.indexBufferObjectID, static_cast<int>(static_cast<float>((sizeof(Block) * totalBlocks) + (sizeof(Vertex) * vertices.size()) + (sizeof(GLuint) * indices.size())) / 1024.0));
+void Chunk::DisplayImGui() {
+    ImGui::Text("Chunk position: {%d, %d, %d}, GS: %d, Blocks: %d, Vertices: %d, Indices: %d, VBO: %d, VAO: %d, IBO %d, Memory usage: %d KB", chunkX, chunkY, chunkZ, generationStatus, totalBlocks, static_cast<int>(vertices.size()), static_cast<int>(indices.size()), vertexBufferObject.vertexBufferObjectID, vertexArrayObject.vertexArrayObjectID, indexBufferObject.indexBufferObjectID, static_cast<int>(static_cast<float>((sizeof(Block) * totalBlocks) + (sizeof(Vertex) * vertices.size()) + (sizeof(GLuint) * indices.size())) / 1024.0));
 }
 
 void Chunk::Delete() {
-    //vertexArrayObject.Delete();
-    //vertexBufferObject.Delete();
-    //indexBufferObject.Delete();
+    vertexArrayObject.Delete();
+    vertexBufferObject.Delete();
+    indexBufferObject.Delete();
 
     if (blocks) {
         for (int x = 0; x < chunkSize; ++x) {

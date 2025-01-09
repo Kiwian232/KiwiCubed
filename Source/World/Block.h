@@ -57,24 +57,6 @@ enum FaceDirection {
     BOTTOM
 };
 
-struct BlockPosition {
-    std::bitset<5> x;
-    std::bitset<5> y;
-    std::bitset<5> z;
-
-    int xInt () const {
-        return static_cast<int>(x.to_ulong());
-    }
-
-    int yInt () const {
-        return static_cast<int>(x.to_ulong());
-    }
-
-    int zInt () const {
-        return static_cast<int>(x.to_ulong());
-    }
-};
-
 struct BlockType {
     BlockStringID blockStringID;
     std::vector<TextureID> textures;
@@ -108,12 +90,12 @@ class BlockManager {
 
         void RegisterBlockType(BlockType blockType);
 
-        BlockType* GetBlockType(BlockStringID blockStringID);
-        BlockType* GetBlockType(const char* modID, const char* blockName);
-        BlockType* GetBlockType(unsigned short blockID);
+        BlockType GetBlockType(BlockStringID blockStringID);
+        BlockType GetBlockType(const char* modID, const char* blockName);
+        BlockType GetBlockType(unsigned short blockID);
 
-        unsigned short* GetBlockID(BlockStringID blockStringID);
-        unsigned short* GetBlockID(const char* modID, const char* blockName);
+        unsigned short GetBlockID(BlockStringID blockStringID);
+        unsigned short GetBlockID(const char* modID, const char* blockName);
 
     private:
         std::unordered_map<unsigned short, BlockType> blockTypes;
@@ -121,7 +103,7 @@ class BlockManager {
         std::unordered_map<unsigned short, BlockStringID> blockIDsToStrings;
         std::unordered_map<BlockStringID, unsigned short> blockStringsToIDs;
 
-        unsigned short latestBlockID = 0;
+        int latestBlockID = -1;
 };
 
 
@@ -130,10 +112,10 @@ inline BlockManager blockManager = BlockManager();
 
 class Block {
     public:
-        Block() : blockPosition(0, 0, 0), blockID(0) {}
-        Block(unsigned short blockID) : blockPosition(0, 0, 0), blockID(blockID) {}
+        Block() : blockX(0), blockY(0), blockZ(0), blockID(0) {}
+        Block(unsigned short blockID) : blockX(0), blockY(0), blockZ(0), blockID(blockID) {}
 
-        void GenerateBlock(BlockPosition newBlockPosition, int chunkX, int chunkY, int chunkZ, unsigned int chunkSize, bool debug);
+        void GenerateBlock(unsigned short blockX, unsigned short blockY, unsigned short blockZ, int chunkX, int chunkY, int chunkZ, unsigned int chunkSize, bool debug);
         void AddFace(std::vector<GLfloat>& vertices, std::vector<GLuint>& indices, FaceDirection faceDirection, int chunkX, int chunkY, int chunkZ, unsigned int chunkSize);
 
         unsigned int GetBlockID() const;
@@ -142,7 +124,10 @@ class Block {
         bool IsAir();
 
     private:
-        BlockPosition blockPosition;
+        // Don't need this, look at that one convo, remember chunk palettizing
+        unsigned short blockX;
+        unsigned short blockY;
+        unsigned short blockZ;
 
         unsigned short blockID;
         unsigned short variant;

@@ -50,8 +50,6 @@ void World::Render(Shader shaderProgram) {
 
 void World::GenerateWorld() {
     INFO("Generating world");
-
-    chunkAddition = 0;
     
     auto start_time = std::chrono::high_resolution_clock::now();
     for (unsigned int chunkX = 0; chunkX < worldSize; ++chunkX) {
@@ -68,17 +66,15 @@ void World::GenerateWorld() {
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count() / 1000.0f;
 
     int chunkCount = worldSize * worldSize * worldSize;
-    float chunkGenerationSpeed = static_cast<float>(duration / chunkCount);
-    float chunkgenspeed_seconds = chunkGenerationSpeed / 1000.0f;
+    float chunkGenerationSpeed = static_cast<float>(static_cast<float>(duration) / chunkCount);
+    float chunkGenerationSpeedSeconds = 1000.0f / chunkGenerationSpeed;
 
 
     INFO("Finished generating world");
     INFO("World creation with chunk count of " + std::to_string(chunkCount) + " took " + std::to_string(duration) + " ms" + " or roughly " + std::to_string(chunkGenerationSpeed) + " ms per chunk (slightly innacurate as empty chunks are skipped)");
-    INFO("Around " + std::to_string(chunkgenspeed_seconds) + " chunks generated, meshed and added per second");
+    INFO("Around " + std::to_string(chunkGenerationSpeedSeconds) + " chunks generated, meshed and added per second");
 
     isWorldGenerated = true;
-
-    DEBUG("added " + chunkAddition);
 }
 
 void World::GenerateChunk(int chunkX, int chunkY, int chunkZ, Chunk& chunk, bool updateCallerChunk, Chunk& callerChunk) {

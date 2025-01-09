@@ -1,4 +1,4 @@
-project('kiwicubed', 'cpp', default_options: ['cpp_std=c++20'])
+project('kiwicubed', 'cpp', default_options: ['cpp_std=c++20', 'cpu_family=x86_64'])
 
 # Stops KiwiCubed\subprojects\glm-1.0.1\glm\gtx\../gtx/transform.hpp(23): fatal error C1189
 add_project_arguments('-DGLM_ENABLE_EXPERIMENTAL', language: 'cpp')
@@ -32,6 +32,7 @@ executable(
     'Source/Rendering/Texture.cpp',
     'Source/Rendering/Shader.cpp',
 
+    # Other
     'Source/Input.cpp',
     'Source/Player.cpp',
     'Source/SingleplayerHandler.cpp',
