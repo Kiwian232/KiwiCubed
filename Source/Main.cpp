@@ -232,13 +232,15 @@ int main() {
 			singleplayerHandler.singleplayerWorld.player.UpdateCameraMatrix(wireframeShaderProgram);
 			singleplayerHandler.singleplayerWorld.player.UpdateCameraMatrix(chunkDebugShaderProgram);
 
+			wireframeShaderProgram.SetUniform3fv("cameraPosition", singleplayerHandler.singleplayerWorld.player.GetEntityData().position);
+
 			singleplayerHandler.singleplayerWorld.Render(terrainShaderProgram);
 
-			glm::vec3 c1 = singleplayerHandler.singleplayerWorld.player.GetEntityData().physicsBoundingBox.corner1;
-			glm::vec3 c2 = singleplayerHandler.singleplayerWorld.player.GetEntityData().physicsBoundingBox.corner2;
-			glm::vec3 pos = singleplayerHandler.singleplayerWorld.player.GetEntityData().position;
+			glm::vec3 playerPhysicsBoundingBoxCorner1 = singleplayerHandler.singleplayerWorld.player.GetEntityData().physicsBoundingBox.corner1;
+			glm::vec3 playerPhysicsBoundingBoxCorner2 = singleplayerHandler.singleplayerWorld.player.GetEntityData().physicsBoundingBox.corner2;
+			glm::vec3 playerPosition = singleplayerHandler.singleplayerWorld.player.GetEntityData().position;
 
-			debugRenderer.UpdateBuffers(c1, c2, pos, singleplayerHandler.singleplayerWorld.GetChunkDebugVisualizationVertices(), singleplayerHandler.singleplayerWorld.GetChunkDebugVisualizationIndices(), singleplayerHandler.singleplayerWorld.GetChunkOrigins());
+			debugRenderer.UpdateBuffers(playerPhysicsBoundingBoxCorner1, playerPhysicsBoundingBoxCorner2, playerPosition, singleplayerHandler.singleplayerWorld.GetChunkDebugVisualizationVertices(), singleplayerHandler.singleplayerWorld.GetChunkDebugVisualizationIndices(), singleplayerHandler.singleplayerWorld.GetChunkOrigins());
 			debugRenderer.UpdateUniforms();
 			debugRenderer.RenderDebug(wireframeShaderProgram, chunkDebugShaderProgram);
 		}
@@ -266,6 +268,7 @@ int main() {
 	glfwDestroyWindow(globalWindow.GetWindowInstance());
 	glfwTerminate();
 
+	INFO("Finished cleaning up");
 	return 0;
 }
 

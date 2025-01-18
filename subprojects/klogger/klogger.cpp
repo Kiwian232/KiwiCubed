@@ -26,7 +26,7 @@ std::string LogLevelToString(LogLevel level) {
 	switch (level) {
 		case LogLevel::debug: return "DEBUG";
 		case LogLevel::info: return "INFO";
-		case LogLevel::warn: return "WARNING";
+		case LogLevel::warn: return "WARN";
 		case LogLevel::error: return "ERROR";
 		case LogLevel::critical: return "CRITICAL";
 		case LogLevel::off: return "OFF";

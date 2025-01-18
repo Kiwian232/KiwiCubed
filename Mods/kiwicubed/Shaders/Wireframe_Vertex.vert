@@ -5,10 +5,13 @@ layout (location = 0) in vec3 position;
 uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
 
+out vec3 worldPositionOut;
+
 
 void main()
 {
-	vec4 worldPosition = vec4(position, 1);
+	vec3 worldPosition = position;
 
-	gl_Position = projectionMatrix * viewMatrix * worldPosition;
+	gl_Position = projectionMatrix * viewMatrix * vec4(worldPosition, 1.0);
+	worldPositionOut = worldPosition;
 }

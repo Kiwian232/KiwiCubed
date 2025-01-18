@@ -31,7 +31,6 @@ class Player : public Entity {
 		void SetPosition(Window* window, int playerX, int playerY, int playerZ);
 		const std::tuple<int, int, int> GetPosition();
 	
-		void UpdateShader(Shader& shader, const char* uniform);
 		void UpdateCameraMatrix(Shader& shader);
 	
 		void Delete();

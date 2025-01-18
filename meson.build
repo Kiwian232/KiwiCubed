@@ -1,11 +1,11 @@
-project('kiwicubed', 'cpp', default_options: ['cpp_std=c++20', 'cpu_family=x86_64'])
+project('kiwicubed', 'cpp', default_options: ['cpp_std=c++20'])
 
 # Stops KiwiCubed\subprojects\glm-1.0.1\glm\gtx\../gtx/transform.hpp(23): fatal error C1189
 add_project_arguments('-DGLM_ENABLE_EXPERIMENTAL', language: 'cpp')
 add_project_arguments('-DSTB_IMAGE_IMPLEMENTATION', language: 'cpp')
 
 if meson.get_compiler('cpp').get_id() == 'msvc'
-    add_project_link_arguments('/ignore:4099', language: 'cpp') # 4099 is for PDB not found, which is fine and just logspam because we don't have PDBs anyways
+    add_project_link_arguments('/ignore:4099', language: 'cpp')
 endif
 
 executable(
@@ -34,10 +34,11 @@ executable(
 
     # Other
     'Source/Input.cpp',
+    'Source/Main.cpp',
     'Source/Player.cpp',
     'Source/SingleplayerHandler.cpp',
+    'Source/ThreadedWorkers.cpp',
     'Source/Window.cpp',
-    'Source/Main.cpp',
   ),
   include_directories: include_directories('Source', 'Source/GPUObjects', 'Source/World', 'Source/Rendering'),
   dependencies: [

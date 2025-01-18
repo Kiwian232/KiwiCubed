@@ -4,9 +4,9 @@
 void DebugRenderer::SetupBuffers(const glm::vec3& playerPhysicsBoundingBoxCorner1, const glm::vec3& playerPhysicsBoundingBoxCorner2, const glm::vec3& playerPosition, const std::vector<GLfloat>& chunkDebugVertices, const std::vector<GLuint>& chunkDebugIndices, const std::vector<glm::vec4>& chunkOrigins) {
 	// PlayerPhysicsBoundingBox setup
 
-	std::vector<glm::vec3> playerPhysicsBoundingBoxVertices = {
-		{playerPhysicsBoundingBoxCorner1.x + playerPosition.x, playerPhysicsBoundingBoxCorner1.y + playerPosition.y, playerPhysicsBoundingBoxCorner1.z + playerPosition.z}, {playerPhysicsBoundingBoxCorner2.x + playerPosition.x, playerPhysicsBoundingBoxCorner1.y + playerPosition.y, playerPhysicsBoundingBoxCorner1.z + playerPosition.z}, {playerPhysicsBoundingBoxCorner2.x + playerPosition.x, playerPhysicsBoundingBoxCorner2.y + playerPosition.y, playerPhysicsBoundingBoxCorner1.z + playerPosition.z}, {playerPhysicsBoundingBoxCorner1.x + playerPosition.x, playerPhysicsBoundingBoxCorner2.y + playerPosition.y, playerPhysicsBoundingBoxCorner1.z + playerPosition.z},
-		{playerPhysicsBoundingBoxCorner1.x + playerPosition.x, playerPhysicsBoundingBoxCorner1.y + playerPosition.y, playerPhysicsBoundingBoxCorner2.z + playerPosition.z}, {playerPhysicsBoundingBoxCorner2.x + playerPosition.x, playerPhysicsBoundingBoxCorner1.y + playerPosition.y, playerPhysicsBoundingBoxCorner2.z + playerPosition.z}, {playerPhysicsBoundingBoxCorner2.x + playerPosition.x, playerPhysicsBoundingBoxCorner2.y + playerPosition.y, playerPhysicsBoundingBoxCorner2.z + playerPosition.z}, {playerPhysicsBoundingBoxCorner1.x + playerPosition.x, playerPhysicsBoundingBoxCorner2.y + playerPosition.y, playerPhysicsBoundingBoxCorner2.z + playerPosition.z}
+	std::vector<GLfloat> playerPhysicsBoundingBoxVertices = {
+		playerPhysicsBoundingBoxCorner1.x + playerPosition.x, playerPhysicsBoundingBoxCorner1.y + playerPosition.y, playerPhysicsBoundingBoxCorner1.z + playerPosition.z, playerPhysicsBoundingBoxCorner2.x + playerPosition.x, playerPhysicsBoundingBoxCorner1.y + playerPosition.y, playerPhysicsBoundingBoxCorner1.z + playerPosition.z, playerPhysicsBoundingBoxCorner2.x + playerPosition.x, playerPhysicsBoundingBoxCorner2.y + playerPosition.y, playerPhysicsBoundingBoxCorner1.z + playerPosition.z, playerPhysicsBoundingBoxCorner1.x + playerPosition.x, playerPhysicsBoundingBoxCorner2.y + playerPosition.y, playerPhysicsBoundingBoxCorner1.z + playerPosition.z,
+		playerPhysicsBoundingBoxCorner1.x + playerPosition.x, playerPhysicsBoundingBoxCorner1.y + playerPosition.y, playerPhysicsBoundingBoxCorner2.z + playerPosition.z, playerPhysicsBoundingBoxCorner2.x + playerPosition.x, playerPhysicsBoundingBoxCorner1.y + playerPosition.y, playerPhysicsBoundingBoxCorner2.z + playerPosition.z, playerPhysicsBoundingBoxCorner2.x + playerPosition.x, playerPhysicsBoundingBoxCorner2.y + playerPosition.y, playerPhysicsBoundingBoxCorner2.z + playerPosition.z, playerPhysicsBoundingBoxCorner1.x + playerPosition.x, playerPhysicsBoundingBoxCorner2.y + playerPosition.y, playerPhysicsBoundingBoxCorner2.z + playerPosition.z
 	};
 
 	GLuint playerPhysicsBoundingBoxIndices[] = {
@@ -23,12 +23,12 @@ void DebugRenderer::SetupBuffers(const glm::vec3& playerPhysicsBoundingBoxCorner
 	GLCall(glBindVertexArray(playerPhysicsBoundingBoxVAO));
 
 	GLCall(glBindBuffer(GL_ARRAY_BUFFER, playerPhysicsBoundingBoxVBO));
-	GLCall(glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * playerPhysicsBoundingBoxVertices.size(), playerPhysicsBoundingBoxVertices.data(), GL_STATIC_DRAW));
+	GLCall(glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * playerPhysicsBoundingBoxVertices.size(), playerPhysicsBoundingBoxVertices.data(), GL_STATIC_DRAW));
 
 	GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, playerPhysicsBoundingBoxEBO));
 	GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(playerPhysicsBoundingBoxIndices), playerPhysicsBoundingBoxIndices, GL_STATIC_DRAW));
 
-	GLCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0));
+	GLCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat), (void*)0));
 	GLCall(glEnableVertexAttribArray(0));
 
 

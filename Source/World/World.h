@@ -63,6 +63,7 @@ class World {
 
 	private:
 		SingleplayerHandler* singleplayerHandler;
+		Chunk defaultChunk = Chunk(0, 0, 0);
 
 		std::atomic<bool> shouldTick;
 		std::thread TickThread;
@@ -71,6 +72,9 @@ class World {
 		unsigned int totalTicks = 0;
 		unsigned int ticksPerSecond = 0;
 		std::chrono::steady_clock::time_point tpsStartTime = std::chrono::high_resolution_clock::now();
+
+		std::unordered_map<std::tuple<int, int, int>, glm::ivec3, TripleHash> chunkGenerationQueue;
+		unsigned short playerChunkGenerationRadius = 1;
 
 		bool isWorldAllocated = false;
 		bool isWorldGenerated = false;

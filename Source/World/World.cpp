@@ -40,8 +40,8 @@ void World::Render(Shader shaderProgram) {
     }
 
     shaderProgram.Bind();
-    for (auto it = chunkHandler.chunks.begin(); it != chunkHandler.chunks.end(); ++it) {
-        auto& chunk = it->second;
+    for (auto iterator = chunkHandler.chunks.begin(); iterator != chunkHandler.chunks.end(); ++iterator) {
+        auto& chunk = iterator->second;
         if (!chunk.isEmpty) {
             chunk.Render();
         }
@@ -151,10 +151,15 @@ void World::DisplayImGui(unsigned int option) {
         ImGui::Text("TPS: %d", ticksPerSecond);
         ImGui::Text("Total chunks: %d", totalChunks);
         ImGui::Text("Memory usage: %.2f MB", totalMemoryUsage / (1024.0 * 1024.0));
+        if (ImGui::CollapsingHeader("Chunk Generation Queue")) {
+            for (auto iterator = chunkGenerationQueue.begin(); iterator != chunkGenerationQueue.end(); ++iterator) {
+                ImGui::Text("{%d, %d, %d}", iterator->second.x, iterator->second.y, iterator->second.z);
+            }
+        }
     }
     else if (option == 1) {
-        for (auto it = chunkHandler.chunks.begin(); it != chunkHandler.chunks.end(); ++it) {
-            auto& chunk = it->second;
+        for (auto iterator = chunkHandler.chunks.begin(); iterator != chunkHandler.chunks.end(); ++iterator) {
+            auto& chunk = iterator->second;
             chunk.DisplayImGui();
         }
     }
@@ -227,6 +232,31 @@ void World::Tick() {
 
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - tpsStartTime).count();
+
+    if (totalTicks == 1) {
+        glm::ivec3 playerChunkPosition = player.GetEntityData().globalChunkPosition;
+        for (int chunkX = playerChunkPosition.x - playerChunkGenerationRadius; chunkX < playerChunkPosition.x + playerChunkGenerationRadius; ++chunkX) {
+            for (int chunkY = playerChunkPosition.y - playerChunkGenerationRadius; chunkY < playerChunkPosition.y + playerChunkGenerationRadius; ++chunkY) {
+                for (int chunkZ = playerChunkPosition.z - playerChunkGenerationRadius; chunkZ < playerChunkPosition.z + playerChunkGenerationRadius; ++chunkZ) {
+                    if (chunkHandler.GetChunkExists(chunkX, chunkY, chunkZ)) {
+                        continue;
+                    }
+                    auto chunk = chunkGenerationQueue.find(std::make_tuple(chunkX, chunkY, chunkZ));
+                    if (chunk == chunkGenerationQueue.end()) {
+                        chunkGenerationQueue.insert(std::make_pair(std::tuple<int, int, int>(chunkX, chunkY, chunkZ), glm::vec3(chunkX, chunkY, chunkZ)));
+                    }
+                }
+            }
+        }
+    }
+
+    if (!chunkGenerationQueue.empty()) {
+        Chunk defaultChunk = Chunk(0, 0, 0);
+        auto iterator = chunkGenerationQueue.begin();
+        const glm::ivec3& chunkPosition = iterator->second;
+        chunkHandler.GenerateChunk(chunkPosition.x, chunkPosition.y, chunkPosition.z, defaultChunk, false, false);
+        chunkGenerationQueue.erase(iterator);
+    }
 
     if (duration >= 1000.0) {
         ticksPerSecond = static_cast<unsigned int>(static_cast<float>(totalTicks) / (duration / 1000.0));

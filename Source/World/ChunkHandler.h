@@ -154,7 +154,8 @@ class ChunkHandler {
 
         Chunk& GetChunk(int chunkX, int chunkY, int chunkZ);
         Chunk& AddChunk(int chunkX, int chunkY, int chunkZ);
-        void GenerateChunk(int chunkX, int chunkY, int chunkZ, bool debug);
+        bool GetChunkExists(int chunkX, int chunkY, int chunkZ);
+        void GenerateChunk(int chunkX, int chunkY, int chunkZ, Chunk& callerChunk, bool updateCallerChunk, bool debug);
         void MeshChunk(int chunkX, int chunkY, int chunkZ);
         void SmartGenerateAndMeshChunk(int chunkX, int chunkY, int chunkZ);
         void ForceGenerateAndMeshChunk(int chunkX, int chunkY, int chunkZ);

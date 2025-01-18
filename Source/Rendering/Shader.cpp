@@ -12,7 +12,16 @@ Shader::Shader(const std::string& vertexFilePath, const std::string& fragmentFil
 
     if (!fragmentSource.empty() || !vertexSource.empty()) {
         shaderProgramID = CreateShader(vertexSource, fragmentSource, vertexFilePath, fragmentFilePath);
-        INFO("Successfully created shader program with ID of " + std::to_string(shaderProgramID));
+
+        if (vertexFilePath.find_last_of('/') != std::string::npos) {
+            shaderName = vertexFilePath.substr(vertexFilePath.find_last_of('/') + 1);
+        }
+        
+        if (shaderName.find('_') != std::string::npos) {
+            shaderName = shaderName.substr(0, shaderName.find('_'));
+        }
+
+        INFO("Successfully created " + shaderName + " shader program with ID of " + std::to_string(shaderProgramID));
     }
     else {
         ERR("Shader file(s) not found, aborting shader creation");
@@ -32,6 +41,7 @@ std::string Shader::ParseShader(const std::string& filePath) {
 }
 
 int Shader::CompileShader(unsigned int type, const std::string& source, const std::string& filePath) {
+    OVERRIDE_LOG_NAME("Shader Compilation");
     unsigned int shaderProgramID = glCreateShader(type);
     const char* src = &source[0];
     GLCall(glShaderSource(shaderProgramID, 1, &src, nullptr));
@@ -44,8 +54,8 @@ int Shader::CompileShader(unsigned int type, const std::string& source, const st
         GLCall(glGetShaderiv(shaderProgramID, GL_INFO_LOG_LENGTH, &length));
         char* message = (char*)malloc(length * sizeof(char));
         GLCall(glGetShaderInfoLog(shaderProgramID, length, &length, message));
-        std::cerr << "[Shader Compilation / Error] Failed to compile " << (type == GL_VERTEX_SHADER ? "vertex" : "fragment") << " shader from file " << filePath << std::endl;
-        std::cerr << "[Shader Compilation / Error] Shader compilation error message: " << std::endl << message << std::endl;
+        ERR("Failed to compile " + std::string((type == GL_VERTEX_SHADER ? "vertex" : "fragment")) + " shader from file " + filePath);
+        ERR("Shader compilation error message:  \n" + std::string(message));
         GLCall(glDeleteShader(shaderProgramID));
         return -1;
     }
@@ -73,25 +83,28 @@ int Shader::CreateShader(const std::string& vertexShader, const std::string& fra
 }
 
 unsigned int Shader::UniformTest(const char* uniform) const {
+    OVERRIDE_LOG_NAME("Shader Uniform Setting");
     unsigned int uniformLocation = glGetUniformLocation(shaderProgramID, uniform);
 
     if (uniformLocation == -1) {
-        std::cerr << "[Shader Uniform Setting / Error] Could not find uniform: " << uniform << " in the specified shader with ID of " << shaderProgramID << std::endl;
+        WARN("Could not find uniform: " + std::string(uniform) + " in " + shaderName + " shader with ID of " + std::to_string(shaderProgramID));
     }
     return uniformLocation;
 }
 
-void Shader::SetUniform4fv(const char* uniform, glm::mat4 value) const {
+void Shader::SetUniform1ui(const char* uniform, unsigned int value) const {
+    Bind();
     unsigned int uniformLocation = UniformTest(uniform);
 
     if (uniformLocation == -1) {
         return;
     }
 
-    GLCall(glUniformMatrix4fv(uniformLocation, 1, GL_FALSE, glm::value_ptr(value)));
+    GLCall(glUniform1ui(uniformLocation, value));
 }
 
 void Shader::SetUniform3fv(const char* uniform, glm::vec3 value) const {
+    Bind();
     unsigned int uniformLocation = UniformTest(uniform);
 
     if (uniformLocation == -1) {
@@ -101,14 +114,15 @@ void Shader::SetUniform3fv(const char* uniform, glm::vec3 value) const {
     GLCall(glUniform3fv(uniformLocation, 1, glm::value_ptr(value)));
 }
 
-void Shader::SetUniform1ui(const char* uniform, unsigned int value) const {
+void Shader::SetUniform4fv(const char* uniform, glm::mat4 value) const {
+    Bind();
     unsigned int uniformLocation = UniformTest(uniform);
 
     if (uniformLocation == -1) {
         return;
     }
 
-    GLCall(glUniform1ui(uniformLocation, value));
+    GLCall(glUniformMatrix4fv(uniformLocation, 1, GL_FALSE, glm::value_ptr(value)));
 }
 
 void Shader::Bind() const {

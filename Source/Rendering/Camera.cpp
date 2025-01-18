@@ -7,7 +7,6 @@ void Camera::Setup(Window& window) {
 }
 
 void Camera::SetCameraMatrix(Shader& shader) const {
-	shader.Bind();
 	shader.SetUniform4fv("projectionMatrix", projectionMatrix);
 	shader.SetUniform4fv("viewMatrix", viewMatrix);
 }

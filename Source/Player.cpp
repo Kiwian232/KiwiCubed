@@ -161,10 +161,6 @@ const std::tuple<int, int, int> Player::GetPosition() {
 	return std::make_tuple(static_cast<int>(entityData.position.x), static_cast<int>(entityData.position.y), static_cast<int>(entityData.position.z));
 }
 
-void Player::UpdateShader(Shader& shader, const char* uniform) {
-
-}
-
 void Player::UpdateCameraMatrix(Shader& shader) {
 	if (!camera) {
 		std::cerr << "[Camera Matrix / Warn] Trying to update camera matrix without a camera, aborting" << std::endl;
