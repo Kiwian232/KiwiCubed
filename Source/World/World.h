@@ -64,7 +64,7 @@ class World {
 	private:
 		SingleplayerHandler* singleplayerHandler;
 		Chunk defaultChunk = Chunk(0, 0, 0);
-
+		
 		std::atomic<bool> shouldTick;
 		std::thread TickThread;
 		std::mutex TickThreadMutex;

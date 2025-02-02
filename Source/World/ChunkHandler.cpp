@@ -6,6 +6,7 @@ void ChunkHandler::GenerateWorld() {
 }
 
 Chunk& ChunkHandler::GetChunk(int chunkX, int chunkY, int chunkZ) {
+    std::lock_guard<std::mutex> lock(ChunkMutex);
     auto chunk = chunks.find(std::make_tuple(chunkX, chunkY, chunkZ));
     if (chunk != chunks.end()) {
         return chunk->second;
@@ -48,10 +49,8 @@ Chunk& ChunkHandler::AddChunk(int chunkX, int chunkY, int chunkZ) {
 }
 
 void ChunkHandler::GenerateChunk(int chunkX, int chunkY, int chunkZ, Chunk& callerChunk, bool updateCallerChunk, bool debug) {
+    std::lock_guard<std::mutex> lock(ChunkMutex);
     GetChunk(chunkX, chunkY, chunkZ).GenerateBlocks(world, callerChunk, updateCallerChunk, debug);
-    //Chunk& chunk = GetChunk(chunkX, chunkY, chunkZ);
-
-    //workerThreads.ExecuteThreaded(&Chunk::GenerateBlocks, &chunk, std::ref(world), std::ref(defaultChunk), false, debug);
 }
 
 void ChunkHandler::MeshChunk(int chunkX, int chunkY, int chunkZ) {
@@ -61,9 +60,7 @@ void ChunkHandler::MeshChunk(int chunkX, int chunkY, int chunkZ) {
 // Specifically uses the world's GenerateChunk() function that makes sure chunks mesh correctly
 void ChunkHandler::SmartGenerateAndMeshChunk(int chunkX, int chunkY, int chunkZ) {
     Chunk chunk = GetChunk(chunkX, chunkY, chunkZ);
-
-    //workerThreads.ExecuteThreaded(&World::GenerateChunk, &world, chunkX, chunkY, chunkZ, std::ref(chunk), false, std::ref(chunk));
-    //world.GenerateChunk(chunkX, chunkY, chunkZ, chunk, false, chunk);
+    world.GenerateChunk(chunkX, chunkY, chunkZ, chunk, false, chunk);
 }
 
 // Meshes a chunk fully no matter what, even if it needs to alloate / generate surrounding chunks too

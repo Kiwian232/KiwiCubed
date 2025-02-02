@@ -10,7 +10,6 @@
 #include <iostream>
 #include <memory>
 #include <mutex>
-#include <thread>
 #include <tuple>
 #include <unordered_map>
 #include <vector>
@@ -146,6 +145,7 @@ class Chunk {
 class ChunkHandler {
     public:
         std::unordered_map<std::tuple<int, int, int>, Chunk, TripleHash> chunks;
+        std::mutex ChunkMutex;
 
         ChunkHandler(World& world) : world(world) {};
         void Delete();
