@@ -1,5 +1,5 @@
 #include "Player.h"
-#include "klogger.hpp"
+#include "Klogger.hpp"
 
 
 Player::Player(int playerX, int playerY, int playerZ, ChunkHandler& chunkHandler) : Entity(), yaw(0), pitch(0), roll(0), width(640), height(480), chunkHandler(chunkHandler) {
@@ -40,16 +40,6 @@ void Player::Update() {
 		QueryMouseInputs();
 		ApplyPhysics(*this, chunkHandler);
 	}
-
-
-	// Not yet
-	//glm::ivec3 playerChunkPosition = glm::ivec3(static_cast<int>(entityData.position.x / chunkSize), static_cast<int>(entityData.position.y / chunkSize), static_cast<int>(entityData.position.z / chunkSize));
-	//std::cout << playerChunkPosition.x << " " << playerChunkPosition.y << " " << playerChunkPosition.z << " " << chunkHandler.GetChunk(playerChunkPosition.x, playerChunkPosition.y, playerChunkPosition.z).generationStatus << std::endl;
-	//if (!chunkHandler.GetChunk(playerChunkPosition.x, playerChunkPosition.y, playerChunkPosition.z).isGenerated) {
-	//	std::cout << "Not Generated!" << std::endl;
-	//	chunkHandler.AddChunk(playerChunkPosition.x, playerChunkPosition.y, playerChunkPosition.z);
-	//	chunkHandler.GenerateAndMeshChunk(playerChunkPosition.x, playerChunkPosition.y, playerChunkPosition.z);
-	//}
 }
 
 void Player::QueryInputs() {

@@ -2,4 +2,4 @@
 directory = klogger
 
 [provide]
-klogger = klogger_dep
+Klogger = klogger_dep

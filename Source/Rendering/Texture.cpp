@@ -2,7 +2,7 @@
 #include <stb_image.h>
 #include <debug-trap.h>
 
-Texture::Texture(const char* filepath, GLenum textureType, GLenum slot, GLenum format, GLenum pixelType) : atlasSize(0) {
+Texture::Texture(const char* filepath, GLenum textureType, GLenum slot, GLenum format, GLenum pixelType, Renderer& renderer) : ID(0), type(0), atlasSize(0), renderer(renderer) {
 	OVERRIDE_LOG_NAME("Texture Loading");
 	type = textureType;
 
@@ -15,31 +15,36 @@ Texture::Texture(const char* filepath, GLenum textureType, GLenum slot, GLenum f
 		psnip_trap();
 	}
 
-	GLCall(glGenTextures(1, &ID));
-	GLCall(glActiveTexture(slot));
-	GLCall(glBindTexture(textureType, ID));
+	renderer.QueueRenderCommand([&]() {
+		GLCall(glGenTextures(1, &ID));
+		GLCall(glActiveTexture(slot));
+		GLCall(glBindTexture(textureType, ID));
 
-	GLCall(glTexParameteri(textureType, GL_TEXTURE_BASE_LEVEL, 0));
-	GLCall(glTexParameteri(textureType, GL_TEXTURE_MAX_LEVEL, 4));
+		GLCall(glTexParameteri(textureType, GL_TEXTURE_BASE_LEVEL, 0));
+		GLCall(glTexParameteri(textureType, GL_TEXTURE_MAX_LEVEL, 4));
 
-	GLCall(glTexParameteri(textureType, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST));
-	GLCall(glTexParameteri(textureType, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
+		GLCall(glTexParameteri(textureType, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST));
+		GLCall(glTexParameteri(textureType, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
 
-	GLCall(glTexParameteri(textureType, GL_TEXTURE_WRAP_S, GL_REPEAT));
-	GLCall(glTexParameteri(textureType, GL_TEXTURE_WRAP_T, GL_REPEAT));
+		GLCall(glTexParameteri(textureType, GL_TEXTURE_WRAP_S, GL_REPEAT));
+		GLCall(glTexParameteri(textureType, GL_TEXTURE_WRAP_T, GL_REPEAT));
 
-	GLCall(glTexImage2D(textureType, 0, GL_RGBA, imageWidth, imageHeight, 0, format, pixelType, bytes));
-	GLCall(glGenerateMipmap(textureType));
-	GLCall(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, 0.5f));
+		GLCall(glTexImage2D(textureType, 0, GL_RGBA, imageWidth, imageHeight, 0, format, pixelType, bytes));
+		GLCall(glGenerateMipmap(textureType));
+		GLCall(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, 0.5f));
+
+		GLCall(glBindTexture(textureType, 0));
+	});
 
 	stbi_image_free(bytes);
-	GLCall(glBindTexture(textureType, 0));
 }
 
 void Texture::TextureUnit(Shader& shader, const char* uniform, GLuint unit) {
-	GLuint textureUnit = glGetUniformLocation(shader.shaderProgramID, uniform);
+	GLuint textureUnit = shader.UniformTest(uniform);
 	shader.Bind();
-	GLCall(glUniform1i(textureUnit, unit));
+	renderer.QueueRenderCommand([&]() {
+		GLCall(glUniform1i(textureUnit, unit));
+	});
 }
 
 void Texture::SetAtlasSize(Shader& shader, GLuint newAtlasSize) {
@@ -49,13 +54,19 @@ void Texture::SetAtlasSize(Shader& shader, GLuint newAtlasSize) {
 }
 
 void Texture::Bind() const {
-	GLCall(glBindTexture(type, ID));
+	renderer.QueueRenderCommand([&]() {
+		GLCall(glBindTexture(type, ID));
+	});
 }
 
 void Texture::Unbind() const {
-	GLCall(glBindTexture(type, 0));
+	renderer.QueueRenderCommand([&]() {
+		GLCall(glBindTexture(type, 0));
+	});
 }
 
 void Texture::Delete() const {
-	GLCall(glDeleteTextures(1, &ID));
+	renderer.QueueRenderCommand([&]() {
+		GLCall(glDeleteTextures(1, &ID));
+	});
 }

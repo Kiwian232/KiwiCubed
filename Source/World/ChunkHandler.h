@@ -2,7 +2,7 @@
 
 #include "GLError.h"
 #include <glad/glad.h>
-#include <klogger.hpp>
+#include "Klogger.hpp"
 
 #include <algorithm>
 #include <atomic>
@@ -19,6 +19,7 @@
 #include "Block.h"
 #include "IndexBufferObject.h"
 #include "Renderer.h"
+
 #include "Shader.h"
 #include "VertexArrayObject.h"
 #include "VertexBufferObject.h"
@@ -61,13 +62,14 @@ class ObservableInt {
         }
 
         void OnValueChanged(int oldValue, const char* file, int line) {
+            OVERRIDE_LOG_NAME("Observed Value");
             const char* filename = strrchr(file, '/');
             if (!filename) {
                 filename = strrchr(file, '\\');
             }
             filename = filename ? filename + 1 : file;
 
-            std::cout << ("Value changed from " + std::to_string(oldValue) + " to " + std::to_string(value) + " at " + filename + ":" + std::to_string(line)) << std::endl;
+            INFO("Value changed from " + std::to_string(oldValue) + " to " + std::to_string(value) + " at " + filename + ":" + std::to_string(line));
         }
 
         int GetValue() const {
@@ -85,17 +87,15 @@ class Chunk {
         bool isAllocated = false;
         bool isGenerated = false;
         bool isMeshed = false;
+        bool areRenderComponentsSetup = false;
         unsigned int generationStatus = 0;
         bool isEmpty = true;
-        bool isFull;
+        bool isFull = false;
         bool shouldGenerate = true;
         unsigned int totalMemoryUsage;
-        bool id = 0;
+        unsigned int id = 0;
 
-        Chunk() {}
-        Chunk(int chunkX, int chunkY, int chunkZ) : chunkX(chunkX), chunkY(chunkY), chunkZ(chunkZ), isEmpty(false) {}
-
-
+        Chunk(int chunkX, int chunkY, int chunkZ, Renderer& renderer) : chunkX(chunkX), chunkY(chunkY), chunkZ(chunkZ), renderer(renderer) {}
 
         void SetupRenderComponents();
         void AllocateChunk();
@@ -124,9 +124,9 @@ class Chunk {
         void Delete();
     
     private:
-        const int debugVertexScale = 1;
+        int debugVertexScale = 1;
 
-        Renderer renderer;
+        Renderer& renderer;
 
         std::vector<GLfloat> vertices;
         std::vector<GLuint> indices;
@@ -136,18 +136,18 @@ class Chunk {
     
         unsigned int totalBlocks = 0;
     
-        VertexArrayObject vertexArrayObject;
-        VertexBufferObject vertexBufferObject;
-        IndexBufferObject indexBufferObject;
+        VertexArrayObject vertexArrayObject = VertexArrayObject();
+        VertexBufferObject vertexBufferObject = VertexBufferObject();
+        IndexBufferObject indexBufferObject = IndexBufferObject();
 };
 
 
 class ChunkHandler {
     public:
         std::unordered_map<std::tuple<int, int, int>, Chunk, TripleHash> chunks;
-        std::mutex ChunkMutex;
+        std::recursive_mutex ChunkMutex;
 
-        ChunkHandler(World& world) : world(world) {};
+        ChunkHandler(World& world, Renderer& renderer) : world(world), renderer(renderer) {}
         void Delete();
 
         void GenerateWorld();
@@ -165,7 +165,7 @@ class ChunkHandler {
         void RemoveBlock(int chunkX, int chunkY, int chunkZ, int blockX, int blockY, int blockZ);
 
     private:
+        Renderer& renderer;
+        
         World& world;
-
-        Chunk defaultChunk = Chunk(0, 0, 0);
 };

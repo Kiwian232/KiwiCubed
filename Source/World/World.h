@@ -27,43 +27,39 @@ struct ChunkData {
 class World {
 	public:
 		Player player = Player(36, 100, 80, chunkHandler);
-
+	
 		unsigned int totalChunks;
 		float totalMemoryUsage;
-
-		int chunkAddition = 0;
-
-		World() : totalChunks(0), totalMemoryUsage(0), singleplayerHandler(singleplayerHandler), shouldTick(false), tickIntervalMs(50), worldSize(5), chunkHandler(*this) {}
-		World(unsigned int worldSize, SingleplayerHandler* singleplayerHandler);
-
+		
+		World(unsigned int worldSize, SingleplayerHandler* singleplayerHandler, Renderer& renderer);
+		
 		void Setup(Window& window);
 		void SetupRenderComponents();
-
+		
 		void Render(Shader shaderProgram);
 		void GenerateWorld();
 		void GenerateChunk(int chunkX, int chunkY, int chunkZ, Chunk& chunk, bool updateCallerChunk, Chunk& callerChunk);
-
+		
 		void Update();
-
+		
 		void DisplayImGui(unsigned int option);
-
+		
 		Chunk GetChunk(int chunkX, int chunkY, int chunkZ);
 		Entity GetEntity(std::string uuid);
-
+		
 		std::vector<float>& GetChunkDebugVisualizationVertices();
 		std::vector<GLuint>& GetChunkDebugVisualizationIndices();
-
+		
 		std::vector<glm::vec4>& GetChunkOrigins();
-
+		
 		void Tick();
 		bool StartTickThread();
 		bool StopTickThread();
-
+		
 		void Delete();
-
+		
 	private:
 		SingleplayerHandler* singleplayerHandler;
-		Chunk defaultChunk = Chunk(0, 0, 0);
 		
 		std::atomic<bool> shouldTick;
 		std::thread TickThread;
@@ -72,17 +68,16 @@ class World {
 		unsigned int totalTicks = 0;
 		unsigned int ticksPerSecond = 0;
 		std::chrono::steady_clock::time_point tpsStartTime = std::chrono::high_resolution_clock::now();
-
+		
 		std::unordered_map<std::tuple<int, int, int>, glm::ivec3, TripleHash> chunkGenerationQueue;
 		unsigned short playerChunkGenerationRadius = 1;
-
+		
 		bool isWorldAllocated = false;
 		bool isWorldGenerated = false;
 		unsigned int worldSize;
 		ChunkHandler chunkHandler;
-		//BlockManager blockManager;
-
-		Renderer renderer;
+		
+		Renderer& renderer;
 
 		std::vector<GLfloat> chunkDebugVisualizationVertices;
 		std::vector<GLuint> chunkDebugVisualizationIndices;

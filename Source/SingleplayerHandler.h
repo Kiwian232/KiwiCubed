@@ -12,12 +12,12 @@ class SingleplayerHandler {
 
 		bool isLoadedIntoSingleplayerWorld = false;
 
+		SingleplayerHandler(Window &newWindow, Renderer& renderer) : singleplayerWorld(5, this, renderer), window(newWindow), isLoadedIntoSingleplayerWorld(false) {};
+
 		void Setup();
 
 		void StartSingleplayerWorld();
 		void EndSingleplayerWorld();
 
 		void Delete();
-
-	SingleplayerHandler(Window &newWindow) : singleplayerWorld(5, this), window(newWindow), isLoadedIntoSingleplayerWorld(false) {};
 };
