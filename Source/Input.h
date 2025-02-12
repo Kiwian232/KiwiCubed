@@ -1,7 +1,7 @@
 #pragma once
 
 #include <GLFW/glfw3.h>
-#include <Klogger.hpp>
+#include <klogger.hpp>
 
 #include <functional>
 #include <iostream>
@@ -54,7 +54,7 @@ class InputHandler {
     
             auto iterator = std::find(instances.begin(), instances.end(), this);
             int index = static_cast<int>(iterator - instances.begin());
-            outputString << ") for input instance[" << index << "]";
+            outputString << ") for input instance[" << index << "]" << std::endl;
             INFO(outputString.str());
             instances.push_back(this);
         }

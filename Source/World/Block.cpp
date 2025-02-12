@@ -125,8 +125,13 @@ void Block::SetBlockID(unsigned short newBlockID) {
 
 bool Block::IsAir() {
 	if (blockID == 0) {
+		//std::cout << "air ";
 		return true;
+	} else if (blockID == 1) {
+		//std::cout << "stone ";
+		return false;
 	} else {
+		std::cout << blockID << " ";
 		return false;
 	}
 }

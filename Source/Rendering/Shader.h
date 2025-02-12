@@ -2,15 +2,6 @@
 
 #include <GLError.h>
 #include <glad/glad.h>
-#include "Klogger.hpp"
-#include <debug-trap.h>
-
-#include <iostream>
-#include <future>
-#include <string>
-#include <sstream>
-#include <fstream>
-#include <winnt.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -18,7 +9,10 @@
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/vector_angle.hpp>
 
-#include "Renderer.h"
+#include <iostream>
+#include <string>
+#include <sstream>
+#include <fstream>
 
 
 class Shader
@@ -27,7 +21,7 @@ class Shader
 		GLuint shaderProgramID;
 		std::string shaderName = "";
 
-		Shader(const std::string& vertexFilePath, const std::string& fragmentFilePath, Renderer& renderer);
+		Shader(const std::string& vertexFilePath, const std::string& fragmentFilePath);
 
 		unsigned int UniformTest(const char* uniform) const;
 		void SetUniform1ui(const char* uniform, unsigned int value) const;
@@ -39,8 +33,6 @@ class Shader
 		void Delete() const;
 
 	private:
-		Renderer& renderer;
-
 		std::string ParseShader(const std::string& filePath);
 		int CompileShader(unsigned int type, const std::string& source, const std::string& filePath);
 		int CreateShader(const std::string& vertexShader, const std::string& fragmentShader, const std::string& vertexFilePath, const std::string& fragmentFilePath);

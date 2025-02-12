@@ -1,16 +1,12 @@
 #include "ChunkHandler.h"
-
 #include "World.h"
-#include "glad/glad.h"
-#include <mutex>
-
 
 void ChunkHandler::GenerateWorld() {
     world.GenerateWorld();
 }
 
 Chunk& ChunkHandler::GetChunk(int chunkX, int chunkY, int chunkZ) {
-    //std::lock_guard<std::recursive_mutex> lock(ChunkMutex);
+    std::lock_guard<std::mutex> lock(ChunkMutex);
     auto chunk = chunks.find(std::make_tuple(chunkX, chunkY, chunkZ));
     if (chunk != chunks.end()) {
         return chunk->second;
@@ -35,14 +31,14 @@ bool ChunkHandler::GetChunkExists(int chunkX, int chunkY, int chunkZ) {
 Chunk& ChunkHandler::AddChunk(int chunkX, int chunkY, int chunkZ) {
     auto chunk = chunks.find(std::make_tuple(chunkX, chunkY, chunkZ));
     if (chunk == chunks.end()) {
-
-        chunks.insert(std::make_pair(std::tuple<int, int, int>(chunkX, chunkY, chunkZ), Chunk(chunkX, chunkY, chunkZ, renderer)));
+        chunks.insert(std::make_pair(std::tuple<int, int, int>(chunkX, chunkY, chunkZ), Chunk(chunkX, chunkY, chunkZ)));
         chunk = chunks.find(std::make_tuple(chunkX, chunkY, chunkZ));
         chunk->second.SetPosition(chunkX, chunkY, chunkZ);
         chunk->second.AllocateChunk();
         chunk->second.SetupRenderComponents();
 
         world.totalChunks++;
+        world.chunkAddition++;
 
         return chunk->second;
     }
@@ -53,9 +49,8 @@ Chunk& ChunkHandler::AddChunk(int chunkX, int chunkY, int chunkZ) {
 }
 
 void ChunkHandler::GenerateChunk(int chunkX, int chunkY, int chunkZ, Chunk& callerChunk, bool updateCallerChunk, bool debug) {
-    //std::lock_guard<std::recursive_mutex> lock(ChunkMutex);
-    Chunk& chunk = GetChunk(chunkX, chunkY, chunkZ);
-    chunk.GenerateBlocks(world, callerChunk, updateCallerChunk, debug);
+    std::lock_guard<std::mutex> lock(ChunkMutex);
+    GetChunk(chunkX, chunkY, chunkZ).GenerateBlocks(world, callerChunk, updateCallerChunk, debug);
 }
 
 void ChunkHandler::MeshChunk(int chunkX, int chunkY, int chunkZ) {
@@ -70,7 +65,7 @@ void ChunkHandler::SmartGenerateAndMeshChunk(int chunkX, int chunkY, int chunkZ)
 
 // Meshes a chunk fully no matter what, even if it needs to alloate / generate surrounding chunks too
 void ChunkHandler::ForceGenerateAndMeshChunk(int chunkX, int chunkY, int chunkZ) {
-    Chunk defaultChunk = Chunk(0, 0, 0, renderer);
+    Chunk defaultChunk = Chunk(0, 0, 0);
     AddChunk(chunkX, chunkY, chunkZ);
     AddChunk(chunkX - 1, chunkY, chunkZ);
     AddChunk(chunkX, chunkY - 1, chunkZ);

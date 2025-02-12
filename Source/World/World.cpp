@@ -1,19 +1,16 @@
 #include "World.h"
 
-
 #include "SingleplayerHandler.h"
-#include "Klogger.hpp"
 
 
 std::atomic<bool> keepRunning(true);
 
 
-World::World(unsigned int worldSize, SingleplayerHandler* singleplayerHandler, Renderer& renderer) : totalChunks(0), totalMemoryUsage(0), singleplayerHandler(singleplayerHandler), shouldTick(false), tickIntervalMs(50), worldSize(5), chunkHandler(*this, renderer), renderer(renderer) {
-    std::cout << "prolly boutta crash" << std::endl;
+World::World(unsigned int worldSize, SingleplayerHandler* singleplayerHandler) : totalChunks(0), totalMemoryUsage(0), singleplayerHandler(singleplayerHandler), worldSize(worldSize), chunkHandler(*this) {
     for (unsigned int chunkX = 0; chunkX < worldSize; ++chunkX) {
         for (unsigned int chunkY = 0; chunkY < worldSize; ++chunkY) {
             for (unsigned int chunkZ = 0; chunkZ < worldSize; ++chunkZ) {
-                //chunkHandler.AddChunk(chunkX, chunkY, chunkZ);
+                chunkHandler.AddChunk(chunkX, chunkY, chunkZ);
             }
         }
     }
@@ -27,9 +24,8 @@ void World::Setup(Window& window) {
 
 // Currently just calls SetupRenderComponents on all the chunks
 void World::SetupRenderComponents() {
-    OVERRIDE_LOG_NAME("Render Setup");
-    for (auto iterator = chunkHandler.chunks.begin(); iterator != chunkHandler.chunks.end(); ++iterator) {
-        auto& chunk = iterator->second;
+    for (auto it = chunkHandler.chunks.begin(); it != chunkHandler.chunks.end(); ++it) {
+        auto& chunk = it->second;
         chunk.SetupRenderComponents();
     }
 
@@ -53,7 +49,6 @@ void World::Render(Shader shaderProgram) {
 }
 
 void World::GenerateWorld() {
-    OVERRIDE_LOG_NAME("World Generation");
     INFO("Generating world");
     
     auto start_time = std::chrono::high_resolution_clock::now();
@@ -207,26 +202,24 @@ std::vector<glm::vec4>& World::GetChunkOrigins() {
 }
 
 bool World::StartTickThread() {
-    OVERRIDE_LOG_NAME("World Tick Thread");
     if (shouldTick) {
-        WARN("Tried to start tick thread while it was running, aborting");
+        std::cout << "[World Tick Thread / Info] Tried to start tick thread while it was running, aborting" << std::endl;
         return false;
     }
 
-    INFO("Starting tick thread");
+    std::cout << "[World Tick Thread / Info] Starting tick thread" << std::endl;
     shouldTick = true;
     TickThread = std::thread(&World::RunTickThread, this);
     return true;
 }
 
 bool World::StopTickThread() {
-    OVERRIDE_LOG_NAME("World Tick Thread");
     if (!shouldTick) {
-        WARN("Tried to stop tick thread while it was stopped, aborting");
+        std::cout << "[World Tick Thread / Info] Tried to stop tick thread while it was stopped, aborting" << std::endl;
         return false;
     }
 
-    INFO("Stopping tick thread");
+    std::cout << "[World Tick Thread / Info] Stopping tick thread" << std::endl;
     shouldTick = false;
     if (TickThread.joinable()) {
         TickThread.join();
@@ -258,14 +251,15 @@ void World::Tick() {
     }
 
     if (!chunkGenerationQueue.empty()) {
+        Chunk defaultChunk = Chunk(0, 0, 0);
         auto iterator = chunkGenerationQueue.begin();
         const glm::ivec3& chunkPosition = iterator->second;
-        //workerThreads.enqueue(&ChunkHandler::GenerateChunk, &chunkHandler, chunkPosition.x, chunkPosition.y, chunkPosition.z, defaultChunk, false, false);
+        chunkHandler.GenerateChunk(chunkPosition.x, chunkPosition.y, chunkPosition.z, defaultChunk, false, false);
         chunkGenerationQueue.erase(iterator);
     }
 
     if (duration >= 1000.0) {
-        ticksPerSecond = static_cast<unsigned int>(totalTicks * 1000.0 / duration);
+        ticksPerSecond = static_cast<unsigned int>(static_cast<float>(totalTicks) / (duration / 1000.0));
         totalTicks = 0;
         tpsStartTime = end_time;
     }
@@ -277,8 +271,8 @@ void World::RunTickThread() {
     while (shouldTick) {
         auto nextTickTime = std::chrono::steady_clock::now();
         Tick();
-        std::chrono::time_point delay = nextTickTime + std::chrono::milliseconds(tickIntervalMs);
-        std::this_thread::sleep_until(delay);
+        nextTickTime += std::chrono::milliseconds(tickIntervalMs);
+        std::this_thread::sleep_until(nextTickTime);
     }
 }
 

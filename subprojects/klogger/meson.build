@@ -2,7 +2,7 @@ project('klogger', 'cpp', default_options: ['cpp_std=c++20'])
 
 klogger_lib = static_library(
 	'klogger',
-	'Klogger.cpp',
+	'klogger.cpp',
 	include_directories: include_directories('.'),
 )
 

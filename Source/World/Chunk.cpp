@@ -1,17 +1,13 @@
 #include "ChunkHandler.h"
 #include "World.h"
 
-
 // Currently just sets up the VBO, VAO, and IBO
 void Chunk::SetupRenderComponents() {
-    if (!areRenderComponentsSetup) {
-        vertexBufferObject.SetupBuffer();
-        vertexArrayObject.SetupArrayObject();
-        indexBufferObject.SetupBuffer();
-
-        areRenderComponentsSetup = true;
-    }
+    vertexBufferObject.SetupBuffer();
+    vertexArrayObject.SetupArrayObject();
+    indexBufferObject.SetupBuffer();
 }
+
 
 void Chunk::AllocateChunk() {
     if (!isAllocated) {
@@ -81,11 +77,11 @@ void Chunk::GenerateMesh(ChunkHandler& chunkHandler, const bool remesh) {
             std::string chunkPositionString = "{" + std::to_string(chunkX) + ", " + std::to_string(chunkY) + ", " + std::to_string(chunkZ) + "}";
 
             if (!isAllocated) {
-                WARN("Trying to generate mesh for unallocated chunk, aborting" + chunkPositionString);
+                ERR("Trying to generate mesh for unallocated chunk, aborting. (This should never happen, report a bug if you encounter this, thanks) " + chunkPositionString);
             }
 
             if (!isGenerated) {
-                WARN("Trying to generate mesh for ungenerated chunk, aborting" + chunkPositionString);
+                WARN("Trying to generate mesh for ungenerated chunk, aborting. (This should never happen, report a bug if you encounter this, thanks) " + chunkPositionString);
             }
 
             if (IsEmpty()) {

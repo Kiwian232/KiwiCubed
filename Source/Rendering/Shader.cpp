@@ -1,12 +1,16 @@
 #include "Shader.h"
+#include <debug-trap.h>
+#include <string>
+#include <winnt.h>
+#include <klogger.hpp>
 
-Shader::Shader(const std::string& vertexFilePath, const std::string& fragmentFilePath, Renderer& renderer) : renderer(renderer) {
+Shader::Shader(const std::string& vertexFilePath, const std::string& fragmentFilePath) {
     std::string vertexSource = ParseShader(vertexFilePath);
     std::string fragmentSource = ParseShader(fragmentFilePath);
 
     OVERRIDE_LOG_NAME("Shader Setup");
 
-    if (!(fragmentSource.empty() || vertexSource.empty())) {
+    if (!fragmentSource.empty() || !vertexSource.empty()) {
         shaderProgramID = CreateShader(vertexSource, fragmentSource, vertexFilePath, fragmentFilePath);
 
         if (vertexFilePath.find_last_of('/') != std::string::npos) {
@@ -21,14 +25,13 @@ Shader::Shader(const std::string& vertexFilePath, const std::string& fragmentFil
     }
     else {
         ERR("Shader file(s) not found, aborting shader creation");
-        psnip_trap();
     }
 }
 
 std::string Shader::ParseShader(const std::string& filePath) {
     OVERRIDE_LOG_NAME("Shader File Parsing");
     std::ifstream file(filePath);
-    LOG_CHECK(file.is_open(), "Successfully opened shader file at " + filePath, "Could not open shader file at " + filePath);
+    LOG_CHECK_RETURN(file.is_open(), "Successfully opened shader file at " + filePath, "Could not open shader file at " + filePath, "");
     std::string str;
     std::string content;
     while (std::getline(file, str)) {
@@ -39,83 +42,49 @@ std::string Shader::ParseShader(const std::string& filePath) {
 
 int Shader::CompileShader(unsigned int type, const std::string& source, const std::string& filePath) {
     OVERRIDE_LOG_NAME("Shader Compilation");
-    INFO("1");
-    std::promise<unsigned int> promise;
-    std::cout << "1 promise" << std::endl;
-    std::future<unsigned int> future = promise.get_future();
-    std::cout << "1 future" << filePath << std::endl;
-    renderer.QueueRenderCommand([&]() {
-        std::cout << "psuedo-2" << std::endl;
-        unsigned int shaderProgramID = glCreateShader(type);
-        std::cout << "psuedo-2-2" << std::endl;
-        promise.set_value(shaderProgramID);
-        std::cout << "psuedo-2-3" << std::endl;
-    });
-    unsigned int shaderProgramID = future.get();
-    INFO("2");
+    unsigned int shaderProgramID = glCreateShader(type);
     const char* src = &source[0];
+    GLCall(glShaderSource(shaderProgramID, 1, &src, nullptr));
+    GLCall(glCompileShader(shaderProgramID));
+
     int result;
-
-    renderer.QueueRenderCommand([&]() {
-        GLCall(glShaderSource(shaderProgramID, 1, &src, nullptr));
-        GLCall(glCompileShader(shaderProgramID));
-        GLCall(glGetShaderiv(shaderProgramID, GL_COMPILE_STATUS, &result));
-    });
-
+    GLCall(glGetShaderiv(shaderProgramID, GL_COMPILE_STATUS, &result));
     if (!result) {
         int length;
+        GLCall(glGetShaderiv(shaderProgramID, GL_INFO_LOG_LENGTH, &length));
         char* message = (char*)malloc(length * sizeof(char));
-        renderer.QueueRenderCommand([&]() {
-            //GLCall(glGetShaderiv(shaderProgramID, GL_INFO_LOG_LENGTH, &length));
-            //GLCall(glGetShaderInfoLog(shaderProgramID, length, &length, message));
-            //GLCall(glDeleteShader(shaderProgramID));
-        });
+        GLCall(glGetShaderInfoLog(shaderProgramID, length, &length, message));
         ERR("Failed to compile " + std::string((type == GL_VERTEX_SHADER ? "vertex" : "fragment")) + " shader from file " + filePath);
         ERR("Shader compilation error message:  \n" + std::string(message));
+        GLCall(glDeleteShader(shaderProgramID));
         return -1;
     }
 
-    std::cout << "wow finished wow cant beleieve" << std::endl;
     return shaderProgramID;
 }
 
 int Shader::CreateShader(const std::string& vertexShader, const std::string& fragmentShader, const std::string& vertexFilePath, const std::string& fragmentFilePath) {
-    std::promise<unsigned int> promise;
-    std::future<unsigned int> future = promise.get_future();
-    renderer.QueueRenderCommand([&]() {
-        unsigned int shaderProgram = glCreateProgram();
-        promise.set_value(shaderProgram);
-    });
-    unsigned int shaderProgram = future.get();
-
+    unsigned int shaderProgram = glCreateProgram();
     int vertexShaderResult = CompileShader(GL_VERTEX_SHADER, vertexShader, vertexFilePath);
     int fragmentShaderResult = CompileShader(GL_FRAGMENT_SHADER, fragmentShader, fragmentFilePath);
     if (vertexShaderResult == -1 || fragmentShaderResult == -1) {
         psnip_trap();
     }
 
-    renderer.QueueRenderCommand([&]() {
-        GLCall(glAttachShader(shaderProgram, vertexShaderResult));
-        GLCall(glAttachShader(shaderProgram, fragmentShaderResult));
-        GLCall(glLinkProgram(shaderProgram));
-        GLCall(glValidateProgram(shaderProgram));
+    GLCall(glAttachShader(shaderProgram, vertexShaderResult));
+    GLCall(glAttachShader(shaderProgram, fragmentShaderResult));
+    GLCall(glLinkProgram(shaderProgram));
+    GLCall(glValidateProgram(shaderProgram));
 
-        GLCall(glDeleteShader(vertexShaderResult));
-        GLCall(glDeleteShader(fragmentShaderResult));
-    });
+    GLCall(glDeleteShader(vertexShaderResult));
+    GLCall(glDeleteShader(fragmentShaderResult));
 
     return shaderProgram;
 }
 
 unsigned int Shader::UniformTest(const char* uniform) const {
     OVERRIDE_LOG_NAME("Shader Uniform Setting");
-    std::promise<unsigned int> promise;
-    std::future<unsigned int> future = promise.get_future();
-    renderer.QueueRenderCommand([&]() {
-        unsigned int uniformLocation = glGetUniformLocation(shaderProgramID, uniform);
-        promise.set_value(uniformLocation);
-    });
-    unsigned int uniformLocation = future.get();
+    unsigned int uniformLocation = glGetUniformLocation(shaderProgramID, uniform);
 
     if (uniformLocation == -1) {
         WARN("Could not find uniform: " + std::string(uniform) + " in " + shaderName + " shader with ID of " + std::to_string(shaderProgramID));
