@@ -1,6 +1,6 @@
 #include "ChunkHandler.h"
 #include "World.h"
-#include "klogger.hpp"
+#include <klogger.hpp>
 
 // Currently just sets up the VBO, VAO, and IBO
 void Chunk::SetupRenderComponents() {

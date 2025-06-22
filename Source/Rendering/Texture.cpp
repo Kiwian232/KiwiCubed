@@ -1,4 +1,5 @@
 #include <Texture.h>
+#include <stb_image.h>
 
 
 Texture::Texture(const char* filepath, GLenum textureType, GLenum slot, GLenum format, GLenum pixelType) : atlasSize(0) {

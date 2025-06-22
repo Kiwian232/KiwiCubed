@@ -4,6 +4,7 @@
 
 #include "Camera.h"
 #include "Entity.h"
+#include "Events.h"
 
 
 class Player : public Entity {

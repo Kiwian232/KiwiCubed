@@ -1,6 +1,6 @@
 #include "Player.h"
 #include "World/ChunkHandler.h"
-#include "klogger.hpp"
+#include <klogger.hpp>
 
 
 Player::Player(int playerX, int playerY, int playerZ, ChunkHandler& chunkHandler) : Entity(), yaw(0), pitch(0), roll(0), width(640), height(480), chunkHandler(chunkHandler) {

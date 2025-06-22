@@ -23,6 +23,8 @@ executable(
     'Source/World/ChunkHandler.cpp',
     'Source/World/Entity.cpp',
     'Source/World/Physics.cpp',
+    'Source/World/Player.cpp',
+    'Source/World/SingleplayerHandler.cpp',
     'Source/World/World.cpp',
 
     # Rendering
@@ -33,10 +35,9 @@ executable(
     'Source/Rendering/Shader.cpp',
 
     # Other
+    'Source/Events.cpp',
     'Source/Input.cpp',
     'Source/Main.cpp',
-    'Source/Player.cpp',
-    'Source/SingleplayerHandler.cpp',
     'Source/ThreadPool.cpp',
     'Source/Window.cpp'
   ),

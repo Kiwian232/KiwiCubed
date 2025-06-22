@@ -37,6 +37,7 @@ extern "C"
 #include <imgui_impl_opengl3.h>
 #include <nlohmann/json.hpp>
 
+#include "Events.h"
 #include "DebugRenderer.h"
 #include "Input.h"
 #include "Renderer.h"
@@ -119,6 +120,8 @@ int main() {
 	// Set things up before main game loop
 	GLCall(glViewport(0, 0, globalWindow.GetWidth(), globalWindow.GetHeight()));
 	GLCall(glEnable(GL_DEPTH_TEST));
+
+	// MAIN PROGRAM SETUP FINISHED - Most of the rest of this is able to be moved into other places to make this more modular
 
 	// Create a singleplayer world
 	SingleplayerHandler singleplayerHandler(globalWindow);
