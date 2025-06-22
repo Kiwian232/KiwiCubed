@@ -1,4 +1,5 @@
 #include "Player.h"
+#include "World/ChunkHandler.h"
 #include "klogger.hpp"
 
 
@@ -30,6 +31,7 @@ void Player::Setup(Window& window) {
 }
 
 void Player::Update() {
+	OVERRIDE_LOG_NAME("Player Update");
 	if (!camera) {
 		WARN("Trying to update player without a camera, aborting");
 		return;
@@ -38,18 +40,8 @@ void Player::Update() {
 	if (camera->GetWindow().isFocused) {
 		QueryInputs();
 		QueryMouseInputs();
-		ApplyPhysics(*this, chunkHandler);
+		ApplyPhysics(*this, chunkHandler, entityData.applyGravity, entityData.applyCollision);
 	}
-
-
-	// Not yet
-	//glm::ivec3 playerChunkPosition = glm::ivec3(static_cast<int>(entityData.position.x / chunkSize), static_cast<int>(entityData.position.y / chunkSize), static_cast<int>(entityData.position.z / chunkSize));
-	//std::cout << playerChunkPosition.x << " " << playerChunkPosition.y << " " << playerChunkPosition.z << " " << chunkHandler.GetChunk(playerChunkPosition.x, playerChunkPosition.y, playerChunkPosition.z).generationStatus << std::endl;
-	//if (!chunkHandler.GetChunk(playerChunkPosition.x, playerChunkPosition.y, playerChunkPosition.z).isGenerated) {
-	//	std::cout << "Not Generated!" << std::endl;
-	//	chunkHandler.AddChunk(playerChunkPosition.x, playerChunkPosition.y, playerChunkPosition.z);
-	//	chunkHandler.GenerateAndMeshChunk(playerChunkPosition.x, playerChunkPosition.y, playerChunkPosition.z);
-	//}
 }
 
 void Player::QueryInputs() {
@@ -97,6 +89,15 @@ void Player::MouseButtonCallback(int button) {
 				if (blockPosition.z == 0 || blockPosition.z == chunkSize - 1) {
 					chunkHandler.RemeshChunk(chunkPosition.x, chunkPosition.y, chunkPosition.z - 1, false);
 				}
+				if (blockPosition.x == chunkSize - 1) {
+					chunkHandler.RemeshChunk(chunkPosition.x + 1, chunkPosition.y, chunkPosition.z, false);
+				}
+				if (blockPosition.y == chunkSize - 1) {
+					chunkHandler.RemeshChunk(chunkPosition.x, chunkPosition.y + 1, chunkPosition.z, false);
+				}
+				if (blockPosition.z == chunkSize - 1) {
+					chunkHandler.RemeshChunk(chunkPosition.x, chunkPosition.y, chunkPosition.z + 1, false);
+				}
 			} else {
 				chunkHandler.RemeshChunk(chunkPosition.x, chunkPosition.y, chunkPosition.z, false);
 			}
@@ -124,46 +125,53 @@ void Player::QueryMouseInputs() {
 
 	glfwGetCursorPos(window.GetWindowInstance(), &mouseX, &mouseY);
 
-	// Get the amount to rotate for the frame
-	float rotationX = sensitivity * static_cast<float>(mouseY - (window.GetHeight() / 2)) / window.GetHeight();
-	float rotationY = sensitivity * static_cast<float>(mouseX - (window.GetWidth() / 2)) / window.GetWidth();
+	if (!(mouseX == oldMouseX && mouseY == oldMouseY)) {
+		// Get the amount to rotate for the frame
+		float rotationX = sensitivity * static_cast<float>(mouseY - (static_cast<float>(window.GetHeight()) / 2)) / window.GetHeight();
+		float rotationY = sensitivity * static_cast<float>(mouseX - (static_cast<float>(window.GetWidth()) / 2)) / window.GetWidth();
 
-	yaw += rotationY;
-	pitch += rotationX;
+		yaw += rotationY;
+		pitch += rotationX;
 
-	// Clamp pitch to prevent the camera from flipping out
-	if (pitch > 89.9f)
-		pitch = 89.9f;
-	if (pitch < -89.9f)
-		pitch = -89.9f;
+		// Clamp pitch to prevent the camera from flipping out
+		if (pitch > 89.9f)
+			pitch = 89.9f;
+		if (pitch < -89.9f)
+			pitch = -89.9f;
 
-	// wha..? (learnopengl.com)
-	glm::vec3 facing = glm::vec3(0, 0, 0);
-	facing.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-	facing.y = sin(glm::radians(-pitch));
-	facing.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-	entityData.orientation = glm::normalize(facing);
+		// wha..? (learnopengl.com)
+		glm::vec3 facing = glm::vec3(0, 0, 0);
+		facing.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+		facing.y = sin(glm::radians(-pitch));
+		facing.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+		entityData.orientation = glm::normalize(facing);
+	}
 
 	// We don't want anyone to be able to move the mouse off the screen, that would be very very very bad and horrible and would make the game absolutely unplayable
 	glfwSetCursorPos(window.GetWindowInstance(), (static_cast<float>(window.GetWidth()) / 2.0), (static_cast<float>(window.GetHeight()) / 2.0));
+
+	oldMouseX = mouseX;
+	oldMouseY = mouseY;
 }
 
-void Player::SetPosition(Window* window, int newPlayerX, int newPlayerY, int newPlayerZ) {
+void Player::SetPosition(float newPlayerX, float newPlayerY, float newPlayerZ) {
+	OVERRIDE_LOG_NAME("Player Update");
 	if (!camera) {
-		std::cerr << "[Player Update / Warn] Trying to update player without a camera, aborting" << std::endl;
+		WARN("Trying to update player without a camera, aborting");
 		return;
 	}
 	entityData.position = glm::vec3(newPlayerX, newPlayerY, newPlayerZ);
 	camera->UpdateMatrix(80.0f, 0.1f, 1000.0f, entityData.position, entityData.orientation, entityData.upDirection);
 }
 
-const std::tuple<int, int, int> Player::GetPosition() {
-	return std::make_tuple(static_cast<int>(entityData.position.x), static_cast<int>(entityData.position.y), static_cast<int>(entityData.position.z));
+const glm::vec3 Player::GetPosition() {
+	return glm::vec3(entityData.position.x, entityData.position.y, entityData.position.z);
 }
 
 void Player::UpdateCameraMatrix(Shader& shader) {
+	OVERRIDE_LOG_NAME("Camera Matrix");
 	if (!camera) {
-		std::cerr << "[Camera Matrix / Warn] Trying to update camera matrix without a camera, aborting" << std::endl;
+		WARN("Trying to update camera matrix without a camera, aborting");
 	}
 	camera->UpdateMatrix(80.0f, 0.1f, 1000.0f, entityData.position, entityData.orientation, entityData.upDirection);
 	camera->SetCameraMatrix(shader);

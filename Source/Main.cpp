@@ -2,7 +2,6 @@
 // ~2008-2/8/2024
 // R.I.P.
 
-
 bool bitness;
 
 // Make it so on laptops, it will request the dGPU if possible, without this, you have to force it to use the dGPU
@@ -27,6 +26,7 @@ extern "C"
 #include <klogger.hpp>
 
 #include <chrono>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -123,31 +123,46 @@ int main() {
 	// Create a singleplayer world
 	SingleplayerHandler singleplayerHandler(globalWindow);
 	singleplayerHandler.Setup();
-	singleplayerHandler.StartSingleplayerWorld();
-
+	
 	// Create a debug shader
 	Shader terrainShaderProgram("Mods/kiwicubed/Shaders/Terrain_Vertex.vert", "Mods/kiwicubed/Shaders/Terrain_Fragment.frag");
 	Shader wireframeShaderProgram("Mods/kiwicubed/Shaders/Wireframe_Vertex.vert", "Mods/kiwicubed/Shaders/Wireframe_Fragment.frag");
 	Shader chunkDebugShaderProgram("Mods/kiwicubed/Shaders/ChunkDebug_Vertex.vert", "Mods/kiwicubed/Shaders/ChunkDebug_Fragment.frag");
-
+	
 	// Create a debug texture
 	Texture terrainAtlas("Mods/kiwicubed/Textures/terrain_atlas.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
 	terrainAtlas.SetAtlasSize(terrainShaderProgram, 3);
 	terrainAtlas.SetAtlasSize(chunkDebugShaderProgram, 3);
 
+	for (const auto& entry : std::filesystem::directory_iterator("Mods")) {
+        if (entry.is_directory()) {
+            std::string modFolder = entry.path().string();
+            std::string modJsonPath = modFolder + "/mod.json";
+            
+            if (std::filesystem::exists(modJsonPath) && std::filesystem::is_regular_file(modJsonPath)) {
+                std::ifstream file(modFolder + "/mod.json");
+
+				json jsonData;
+				file >> jsonData;
+
+				std::string name = jsonData["mod_title"];
+				std::string version = jsonData["mod_version"];
+				std::string authors = jsonData["mod_authors"];
+
+				INFO("Found mod \"" + name + "\" by \"" + authors + "\" with version \"" + version + "\"");
+            }
+        }
+    }
+	
 	singleplayerHandler.singleplayerWorld.GenerateWorld();
-	singleplayerHandler.singleplayerWorld.SetupRenderComponents();
+	singleplayerHandler.StartSingleplayerWorld();
 
 	terrainAtlas.Bind();
 
 	Renderer renderer = Renderer();
 	DebugRenderer debugRenderer = DebugRenderer();
 
-	glm::vec3 c1 = singleplayerHandler.singleplayerWorld.player.GetEntityData().physicsBoundingBox.corner1;
-	glm::vec3 c2 = singleplayerHandler.singleplayerWorld.player.GetEntityData().physicsBoundingBox.corner2;
-	glm::vec3 pos = singleplayerHandler.singleplayerWorld.player.GetEntityData().position;
-
-	debugRenderer.SetupBuffers(c1, c2, pos, singleplayerHandler.singleplayerWorld.GetChunkDebugVisualizationVertices(), singleplayerHandler.singleplayerWorld.GetChunkDebugVisualizationIndices(), singleplayerHandler.singleplayerWorld.GetChunkOrigins());
+	debugRenderer.SetupBuffers(singleplayerHandler.singleplayerWorld.GetChunkDebugVisualizationVertices(), singleplayerHandler.singleplayerWorld.GetChunkDebugVisualizationIndices(), singleplayerHandler.singleplayerWorld.GetChunkOrigins());
 
 	int frames = 0;
 	auto start_time = std::chrono::high_resolution_clock::now();
@@ -232,17 +247,11 @@ int main() {
 			singleplayerHandler.singleplayerWorld.player.UpdateCameraMatrix(wireframeShaderProgram);
 			singleplayerHandler.singleplayerWorld.player.UpdateCameraMatrix(chunkDebugShaderProgram);
 
-			wireframeShaderProgram.SetUniform3fv("cameraPosition", singleplayerHandler.singleplayerWorld.player.GetEntityData().position);
-
 			singleplayerHandler.singleplayerWorld.Render(terrainShaderProgram);
 
-			glm::vec3 playerPhysicsBoundingBoxCorner1 = singleplayerHandler.singleplayerWorld.player.GetEntityData().physicsBoundingBox.corner1;
-			glm::vec3 playerPhysicsBoundingBoxCorner2 = singleplayerHandler.singleplayerWorld.player.GetEntityData().physicsBoundingBox.corner2;
-			glm::vec3 playerPosition = singleplayerHandler.singleplayerWorld.player.GetEntityData().position;
-
-			debugRenderer.UpdateBuffers(playerPhysicsBoundingBoxCorner1, playerPhysicsBoundingBoxCorner2, playerPosition, singleplayerHandler.singleplayerWorld.GetChunkDebugVisualizationVertices(), singleplayerHandler.singleplayerWorld.GetChunkDebugVisualizationIndices(), singleplayerHandler.singleplayerWorld.GetChunkOrigins());
+			debugRenderer.UpdateBuffers(singleplayerHandler.singleplayerWorld.GetChunkDebugVisualizationVertices(), singleplayerHandler.singleplayerWorld.GetChunkDebugVisualizationIndices(), singleplayerHandler.singleplayerWorld.GetChunkOrigins());
 			debugRenderer.UpdateUniforms();
-			debugRenderer.RenderDebug(wireframeShaderProgram, chunkDebugShaderProgram);
+			debugRenderer.RenderDebug(chunkDebugShaderProgram);
 		}
 
 

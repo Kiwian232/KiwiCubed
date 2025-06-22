@@ -14,6 +14,7 @@
 #include "ChunkHandler.h"
 #include "Player.h"
 #include "Shader.h"
+#include "ThreadPool.h"
 
 
 class Chunk;
@@ -26,12 +27,12 @@ struct ChunkData {
 
 class World {
 	public:
-		Player player = Player(36, 100, 80, chunkHandler);
+		Player player = Player(0, 0, 0, chunkHandler);
 
 		unsigned int totalChunks;
 		float totalMemoryUsage;
 
-		int chunkAddition = 0;
+		unsigned int generationQueuedChunks = 0;
 
 		World() : totalChunks(0), totalMemoryUsage(0), singleplayerHandler(singleplayerHandler), shouldTick(false), tickIntervalMs(50), worldSize(5), chunkHandler(*this) {}
 		World(unsigned int worldSize, SingleplayerHandler* singleplayerHandler);
@@ -66,8 +67,8 @@ class World {
 		Chunk defaultChunk = Chunk(0, 0, 0);
 		
 		std::atomic<bool> shouldTick;
-		std::thread TickThread;
-		std::mutex TickThreadMutex;
+		std::thread tickThread;
+		std::mutex tickThreadMutex;
 		int tickIntervalMs = 50;
 		unsigned int totalTicks = 0;
 		unsigned int ticksPerSecond = 0;
@@ -76,11 +77,12 @@ class World {
 		std::unordered_map<std::tuple<int, int, int>, glm::ivec3, TripleHash> chunkGenerationQueue;
 		unsigned short playerChunkGenerationRadius = 1;
 
+		ThreadPool chunkGenerationThreads = ThreadPool(4);
+
 		bool isWorldAllocated = false;
 		bool isWorldGenerated = false;
 		unsigned int worldSize;
 		ChunkHandler chunkHandler;
-		//BlockManager blockManager;
 
 		Renderer renderer;
 

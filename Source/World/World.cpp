@@ -7,6 +7,7 @@ std::atomic<bool> keepRunning(true);
 
 
 World::World(unsigned int worldSize, SingleplayerHandler* singleplayerHandler) : totalChunks(0), totalMemoryUsage(0), singleplayerHandler(singleplayerHandler), worldSize(worldSize), chunkHandler(*this) {
+    player.SetPosition(static_cast<int>(worldSize * chunkSize / 2), static_cast<int>(worldSize * chunkSize / 2), static_cast<int>(worldSize * chunkSize / 2));
     for (unsigned int chunkX = 0; chunkX < worldSize; ++chunkX) {
         for (unsigned int chunkY = 0; chunkY < worldSize; ++chunkY) {
             for (unsigned int chunkZ = 0; chunkZ < worldSize; ++chunkZ) {
@@ -20,18 +21,6 @@ World::World(unsigned int worldSize, SingleplayerHandler* singleplayerHandler) :
 
 void World::Setup(Window& window) {
     player.Setup(window);
-}
-
-// Currently just calls SetupRenderComponents on all the chunks
-void World::SetupRenderComponents() {
-    for (auto it = chunkHandler.chunks.begin(); it != chunkHandler.chunks.end(); ++it) {
-        auto& chunk = it->second;
-        chunk.SetupRenderComponents();
-    }
-
-    singleplayerHandler->isLoadedIntoSingleplayerWorld = true;
-
-    INFO("Finished setting up chunk render components");
 }
 
 void World::Render(Shader shaderProgram) {
@@ -49,13 +38,14 @@ void World::Render(Shader shaderProgram) {
 }
 
 void World::GenerateWorld() {
+    OVERRIDE_LOG_NAME("World Generation");
     INFO("Generating world");
     
     auto start_time = std::chrono::high_resolution_clock::now();
     for (unsigned int chunkX = 0; chunkX < worldSize; ++chunkX) {
         for (unsigned int chunkY = 0; chunkY < worldSize; ++chunkY) {
             for (unsigned int chunkZ = 0; chunkZ < worldSize; ++chunkZ) {
-                Chunk& chunk = chunkHandler.GetChunk(chunkX, chunkY, chunkZ);
+                Chunk& chunk = chunkHandler.GetChunk(chunkX, chunkY, chunkZ, false);
                 GenerateChunk(chunkX, chunkY, chunkZ, chunk, false, chunk);
                 totalMemoryUsage += chunk.GetMemoryUsage();
             }
@@ -75,6 +65,13 @@ void World::GenerateWorld() {
     INFO("Around " + std::to_string(chunkGenerationSpeedSeconds) + " chunks generated, meshed and added per second");
 
     isWorldGenerated = true;
+
+    for (auto it = chunkHandler.chunks.begin(); it != chunkHandler.chunks.end(); ++it) {
+        auto& chunk = it->second;
+        chunk.SetupRenderComponents();
+    }
+
+    singleplayerHandler->isLoadedIntoSingleplayerWorld = true;
 }
 
 void World::GenerateChunk(int chunkX, int chunkY, int chunkZ, Chunk& chunk, bool updateCallerChunk, Chunk& callerChunk) {
@@ -88,50 +85,43 @@ void World::GenerateChunk(int chunkX, int chunkY, int chunkZ, Chunk& chunk, bool
         chunk.AllocateChunk();
     }
     if (!chunk.isGenerated) {
-        //std::cout << "[Debug] GENERATING {" << chunkX << ", " << chunkY << ", " << chunkZ << "}" << std::endl;
 		chunk.GenerateBlocks(*this, chunk, false, false);
 	}
 
     totalChunks++;
 
-    Chunk& positiveXChunk = chunkHandler.GetChunk(chunkX + 1, chunkY, chunkZ);     // Positive X
-    Chunk& negativeXChunk = chunkHandler.GetChunk(chunkX - 1, chunkY, chunkZ);     // Negative X
-    Chunk& positiveYChunk = chunkHandler.GetChunk(chunkX, chunkY + 1, chunkZ);     // Positive Y
-    Chunk& negativeYChunk = chunkHandler.GetChunk(chunkX, chunkY - 1, chunkZ);     // Negative Y
-    Chunk& positiveZChunk = chunkHandler.GetChunk(chunkX, chunkY, chunkZ + 1);     // Positive Z
-    Chunk& negativeZChunk = chunkHandler.GetChunk(chunkX, chunkY, chunkZ - 1);     // Negative Z
+    Chunk& positiveXChunk = chunkHandler.GetChunk(chunkX + 1, chunkY, chunkZ, true);     // Positive X
+    Chunk& negativeXChunk = chunkHandler.GetChunk(chunkX - 1, chunkY, chunkZ, true);     // Negative X
+    Chunk& positiveYChunk = chunkHandler.GetChunk(chunkX, chunkY + 1, chunkZ, true);     // Positive Y
+    Chunk& negativeYChunk = chunkHandler.GetChunk(chunkX, chunkY - 1, chunkZ, true);     // Negative Y
+    Chunk& positiveZChunk = chunkHandler.GetChunk(chunkX, chunkY, chunkZ + 1, true);     // Positive Z
+    Chunk& negativeZChunk = chunkHandler.GetChunk(chunkX, chunkY, chunkZ - 1, true);     // Negative Z
 
     if (positiveXChunk.isGenerated && negativeXChunk.isGenerated && positiveYChunk.isGenerated && negativeYChunk.isGenerated && positiveZChunk.isGenerated && negativeZChunk.isGenerated && !chunk.isMeshed) {
         chunk.GenerateMesh(chunkHandler, false);
     }
     else if (!updateCallerChunk) {
         if (!positiveXChunk.isGenerated) {
-            //std::cout << "[Debug] ==1== Going for {" << chunkX + 1 << ", " << chunkY << ", " << chunkZ << "} From: {" << chunkX << ", " << chunkY << ", " << chunkZ << "}" << std::endl;
             GenerateChunk(chunkX + 1, chunkY, chunkZ, positiveXChunk, true, chunk);
         }
     
         if (!negativeXChunk.isGenerated) {
-            //::cout << "[Debug] ==2== Going for {" << chunkX - 1 << ", " << chunkY << ", " << chunkZ << "} From: {" << chunkX << ", " << chunkY << ", " << chunkZ << "}" << std::endl;
             GenerateChunk(chunkX - 1, chunkY, chunkZ, negativeXChunk, true, chunk);
         }
     
         if (!positiveYChunk.isGenerated) {
-            //std::cout << "[Debug] ==3== Going for {" << chunkX << ", " << chunkY + 1 << ", " << chunkZ << "} From: {" << chunkX << ", " << chunkY << ", " << chunkZ << "}" << std::endl;
             GenerateChunk(chunkX, chunkY + 1, chunkZ, positiveYChunk, true, chunk);
         }
     
         if (!negativeYChunk.isGenerated) {
-            //std::cout << "[Debug] ==4== Going for {" << chunkX << ", " << chunkY - 1 << ", " << chunkZ << "} From: {" << chunkX << ", " << chunkY << ", " << chunkZ << "}" << std::endl;
             GenerateChunk(chunkX, chunkY - 1, chunkZ, negativeYChunk, true, chunk);
         }
     
         if (!positiveZChunk.isGenerated) {
-            //std::cout << "[Debug] ==5== Going for {" << chunkX << ", " << chunkY << ", " << chunkZ + 1 << "} From: {" << chunkX << ", " << chunkY << ", " << chunkZ << "}" << std::endl;
             GenerateChunk(chunkX, chunkY, chunkZ + 1, positiveZChunk, true, chunk);
         }
     
         if (!negativeZChunk.isGenerated) {
-            //std::cout << "[Debug] ==6== Going for {" << chunkX << ", " << chunkY << ", " << chunkZ - 1 << "} From: {" << chunkX << ", " << chunkY << ", " << chunkZ << "}" << std::endl;
             GenerateChunk(chunkX, chunkY, chunkZ - 1, negativeZChunk, true, chunk);
         }
     }
@@ -143,6 +133,8 @@ void World::GenerateChunk(int chunkX, int chunkY, int chunkZ, Chunk& chunk, bool
 
 void World::Update() {
     player.Update();
+
+    generationQueuedChunks = chunkGenerationThreads.GetQueueSize();
 }
 
 // Pass 0 for world ImGui, 1 for chunk ImGui...
@@ -166,7 +158,7 @@ void World::DisplayImGui(unsigned int option) {
 }
 
 Chunk World::GetChunk(int chunkX, int chunkY, int chunkZ) {
-    return chunkHandler.GetChunk(chunkX, chunkY, chunkZ);
+    return chunkHandler.GetChunk(chunkX, chunkY, chunkZ, false);
 }
 
 Entity World::GetEntity(std::string uuid) {
@@ -202,61 +194,47 @@ std::vector<glm::vec4>& World::GetChunkOrigins() {
 }
 
 bool World::StartTickThread() {
+    OVERRIDE_LOG_NAME("World Tick Thread");
     if (shouldTick) {
-        std::cout << "[World Tick Thread / Info] Tried to start tick thread while it was running, aborting" << std::endl;
+        WARN("ried to start tick thread while it was running, aborting");
         return false;
     }
 
-    std::cout << "[World Tick Thread / Info] Starting tick thread" << std::endl;
+    INFO("Starting tick thread");
     shouldTick = true;
-    TickThread = std::thread(&World::RunTickThread, this);
+    tickThread = std::thread(&World::RunTickThread, this);
     return true;
 }
 
 bool World::StopTickThread() {
+    OVERRIDE_LOG_NAME("World Tick Thread");
     if (!shouldTick) {
-        std::cout << "[World Tick Thread / Info] Tried to stop tick thread while it was stopped, aborting" << std::endl;
+        WARN("Tried to stop tick thread while it was stopped, aborting");
         return false;
     }
 
-    std::cout << "[World Tick Thread / Info] Stopping tick thread" << std::endl;
+    INFO("Stopping tick thread");
     shouldTick = false;
-    if (TickThread.joinable()) {
-        TickThread.join();
+    if (tickThread.joinable()) {
+        tickThread.join();
+    } else {
+        WARN("Tick thread was not joinable (could not be stopped)");
     }
     return true;
 }
 
 void World::Tick() {
-    std::lock_guard<std::mutex> lock(TickThreadMutex);
+    std::lock_guard<std::mutex> lock(tickThreadMutex);
 
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - tpsStartTime).count();
-
     if (totalTicks == 1) {
-        glm::ivec3 playerChunkPosition = player.GetEntityData().globalChunkPosition;
-        for (int chunkX = playerChunkPosition.x - playerChunkGenerationRadius; chunkX < playerChunkPosition.x + playerChunkGenerationRadius; ++chunkX) {
-            for (int chunkY = playerChunkPosition.y - playerChunkGenerationRadius; chunkY < playerChunkPosition.y + playerChunkGenerationRadius; ++chunkY) {
-                for (int chunkZ = playerChunkPosition.z - playerChunkGenerationRadius; chunkZ < playerChunkPosition.z + playerChunkGenerationRadius; ++chunkZ) {
-                    if (chunkHandler.GetChunkExists(chunkX, chunkY, chunkZ)) {
-                        continue;
-                    }
-                    auto chunk = chunkGenerationQueue.find(std::make_tuple(chunkX, chunkY, chunkZ));
-                    if (chunk == chunkGenerationQueue.end()) {
-                        chunkGenerationQueue.insert(std::make_pair(std::tuple<int, int, int>(chunkX, chunkY, chunkZ), glm::vec3(chunkX, chunkY, chunkZ)));
-                    }
-                }
-            }
+        totalMemoryUsage = 0;
+        for (auto iterator = chunkHandler.chunks.begin(); iterator != chunkHandler.chunks.end(); ++iterator) {
+            auto& chunk = iterator->second;
+            totalMemoryUsage += chunk.GetMemoryUsage();
         }
-    }
-
-    if (!chunkGenerationQueue.empty()) {
-        Chunk defaultChunk = Chunk(0, 0, 0);
-        auto iterator = chunkGenerationQueue.begin();
-        const glm::ivec3& chunkPosition = iterator->second;
-        chunkHandler.GenerateChunk(chunkPosition.x, chunkPosition.y, chunkPosition.z, defaultChunk, false, false);
-        chunkGenerationQueue.erase(iterator);
-    }
+    }   
 
     if (duration >= 1000.0) {
         ticksPerSecond = static_cast<unsigned int>(static_cast<float>(totalTicks) / (duration / 1000.0));
@@ -279,4 +257,5 @@ void World::RunTickThread() {
 void World::Delete() {
     chunkHandler.Delete();
     StopTickThread();
+    chunkGenerationThreads.Delete();
 }

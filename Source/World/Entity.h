@@ -27,6 +27,9 @@ struct EntityData {
 	InteractionBoundingBox interactionBoundingBox = InteractionBoundingBox(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 
 	const char* name = "";
+
+	bool applyGravity = false;
+	bool applyCollision = false;
 };
 
 struct ProtectedEntityData {

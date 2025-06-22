@@ -37,7 +37,8 @@ executable(
     'Source/Main.cpp',
     'Source/Player.cpp',
     'Source/SingleplayerHandler.cpp',
-    'Source/Window.cpp',
+    'Source/ThreadPool.cpp',
+    'Source/Window.cpp'
   ),
   include_directories: include_directories('Source', 'Source/GPUObjects', 'Source/World', 'Source/Rendering'),
   dependencies: [

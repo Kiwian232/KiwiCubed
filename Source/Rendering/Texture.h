@@ -1,9 +1,12 @@
 #pragma once
 
 #include <GLError.h>
+#include <debug-trap.h>
 #include <klogger.hpp>
+#include <stb_image.h>
 
 #include"Shader.h"
+
 
 class Texture {
 	public:

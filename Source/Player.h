@@ -28,8 +28,8 @@ class Player : public Entity {
 		void MouseButtonCallback(int button);
 		void QueryMouseInputs();
 	
-		void SetPosition(Window* window, int playerX, int playerY, int playerZ);
-		const std::tuple<int, int, int> GetPosition();
+		void SetPosition(float playerX, float playerY, float playerZ);
+		const glm::vec3 GetPosition();
 	
 		void UpdateCameraMatrix(Shader& shader);
 	
@@ -40,4 +40,7 @@ class Player : public Entity {
 		InputHandler inputHandler = InputHandler();
 		ChunkHandler& chunkHandler;
 		std::unordered_map<std::tuple<int, int, int>, Chunk, TripleHash> chunks;
+
+		float oldMouseX = 0;
+		float oldMouseY = 0;
 };

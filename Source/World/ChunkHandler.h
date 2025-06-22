@@ -61,13 +61,14 @@ class ObservableInt {
         }
 
         void OnValueChanged(int oldValue, const char* file, int line) {
+            OVERRIDE_LOG_NAME("Observable Int");
             const char* filename = strrchr(file, '/');
             if (!filename) {
                 filename = strrchr(file, '\\');
             }
             filename = filename ? filename + 1 : file;
 
-            std::cout << ("Value changed from " + std::to_string(oldValue) + " to " + std::to_string(value) + " at " + filename + ":" + std::to_string(line)) << std::endl;
+            INFO("Value changed from " + std::to_string(oldValue) + " to " + std::to_string(value) + " at " + filename + ":" + std::to_string(line));
         }
 
         int GetValue() const {
@@ -86,11 +87,13 @@ class Chunk {
         bool isGenerated = false;
         bool isMeshed = false;
         unsigned int generationStatus = 0;
+        bool renderComponentsSetup = false;
+        bool shouldRender = true;
         bool isEmpty = true;
         bool isFull;
         bool shouldGenerate = true;
         unsigned int totalMemoryUsage;
-        bool id = 0;
+        unsigned int id = 0;
 
         Chunk() {}
         Chunk(int chunkX, int chunkY, int chunkZ) : chunkX(chunkX), chunkY(chunkY), chunkZ(chunkZ), isEmpty(false) {}
@@ -152,10 +155,10 @@ class ChunkHandler {
 
         void GenerateWorld();
 
-        Chunk& GetChunk(int chunkX, int chunkY, int chunkZ);
+        Chunk& GetChunk(int chunkX, int chunkY, int chunkZ, bool addIfNotFound);
         Chunk& AddChunk(int chunkX, int chunkY, int chunkZ);
         bool GetChunkExists(int chunkX, int chunkY, int chunkZ);
-        void GenerateChunk(int chunkX, int chunkY, int chunkZ, Chunk& callerChunk, bool updateCallerChunk, bool debug);
+        void GenerateChunk(int chunkX, int chunkY, int chunkZ, Chunk callerChunk, bool updateCallerChunk, bool debug);
         void MeshChunk(int chunkX, int chunkY, int chunkZ);
         void SmartGenerateAndMeshChunk(int chunkX, int chunkY, int chunkZ);
         void ForceGenerateAndMeshChunk(int chunkX, int chunkY, int chunkZ);

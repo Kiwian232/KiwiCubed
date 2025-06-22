@@ -1,11 +1,17 @@
 #include "ChunkHandler.h"
 #include "World.h"
+#include "klogger.hpp"
 
 // Currently just sets up the VBO, VAO, and IBO
 void Chunk::SetupRenderComponents() {
+    OVERRIDE_LOG_NAME("Chunk Render Components Setup");
+    if (renderComponentsSetup) {
+        ERR("Tried to setup render components when they were already setup, aborting");
+    }
     vertexBufferObject.SetupBuffer();
     vertexArrayObject.SetupArrayObject();
     indexBufferObject.SetupBuffer();
+    renderComponentsSetup = true;
 }
 
 
@@ -73,33 +79,30 @@ void Chunk::GenerateBlocks(World& world, Chunk& callerChunk, bool updateCallerCh
 void Chunk::GenerateMesh(ChunkHandler& chunkHandler, const bool remesh) {
     OVERRIDE_LOG_NAME("Chunk Mesh Generation");
     if (!isMeshed || remesh) {
-        if (!isAllocated | !isGenerated | IsEmpty()) {
-            std::string chunkPositionString = "{" + std::to_string(chunkX) + ", " + std::to_string(chunkY) + ", " + std::to_string(chunkZ) + "}";
+        if (!isAllocated) {
+            ERR("Trying to generate mesh for unallocated chunk, aborting. (This should never happen, report a bug if you encounter this, thanks) {" + std::to_string(chunkX) + ", " + std::to_string(chunkY) + ", " + std::to_string(chunkZ) + "}");
+            return;
+        }
 
-            if (!isAllocated) {
-                ERR("Trying to generate mesh for unallocated chunk, aborting. (This should never happen, report a bug if you encounter this, thanks) " + chunkPositionString);
-            }
+        if (!isGenerated) {
+            WARN("Trying to generate mesh for ungenerated chunk, aborting. (This should never happen, report a bug if you encounter this, thanks) {" + std::to_string(chunkX) + ", " + std::to_string(chunkY) + ", " + std::to_string(chunkZ) + "}");
+            return;
+        }
 
-            if (!isGenerated) {
-                WARN("Trying to generate mesh for ungenerated chunk, aborting. (This should never happen, report a bug if you encounter this, thanks) " + chunkPositionString);
-            }
-
-            if (IsEmpty()) {
-                INFO("Chunk is empty, skipping mesh generation " + chunkPositionString);
-            }
-
+        if (IsEmpty()) {
+            INFO("Chunk is empty, skipping mesh generation {" + std::to_string(chunkX) + ", " + std::to_string(chunkY) + ", " + std::to_string(chunkZ) + "}");
             return;
         }
 
         vertices.clear();
         indices.clear();
         
-        Chunk& positiveXChunk = chunkHandler.GetChunk(chunkX + 1, chunkY, chunkZ);     // Positive X
-        Chunk& negativeXChunk = chunkHandler.GetChunk(chunkX - 1, chunkY, chunkZ);     // Negative X
-        Chunk& positiveYChunk = chunkHandler.GetChunk(chunkX, chunkY + 1, chunkZ);     // Positive Y
-        Chunk& negativeYChunk = chunkHandler.GetChunk(chunkX, chunkY - 1, chunkZ);     // Negative Y
-        Chunk& positiveZChunk = chunkHandler.GetChunk(chunkX, chunkY, chunkZ + 1);     // Positive Z
-        Chunk& negativeZChunk = chunkHandler.GetChunk(chunkX, chunkY, chunkZ - 1);     // Negative Z;
+        Chunk& positiveXChunk = chunkHandler.GetChunk(chunkX + 1, chunkY, chunkZ, true);     // Positive X
+        Chunk& negativeXChunk = chunkHandler.GetChunk(chunkX - 1, chunkY, chunkZ, true);     // Negative X
+        Chunk& positiveYChunk = chunkHandler.GetChunk(chunkX, chunkY + 1, chunkZ, true);     // Positive Y
+        Chunk& negativeYChunk = chunkHandler.GetChunk(chunkX, chunkY - 1, chunkZ, true);     // Negative Y
+        Chunk& positiveZChunk = chunkHandler.GetChunk(chunkX, chunkY, chunkZ + 1, true);     // Positive Z
+        Chunk& negativeZChunk = chunkHandler.GetChunk(chunkX, chunkY, chunkZ - 1, true);     // Negative Z;
 
         for (int x = 0; x < chunkSize; ++x) {
             for (int y = 0; y < chunkSize; ++y) {
@@ -232,7 +235,12 @@ void Chunk::GenerateMesh(ChunkHandler& chunkHandler, const bool remesh) {
 }
 
 void Chunk::Render() {
-    renderer.DrawElements(vertexArrayObject, vertexBufferObject, indexBufferObject, vertices, indices);
+    if (shouldRender) {
+        if (!renderComponentsSetup) {
+            SetupRenderComponents();
+        }
+        renderer.DrawElements(vertexArrayObject, vertexBufferObject, indexBufferObject, vertices, indices);
+    }
 }
 
 void Chunk::SetPosition(int newChunkX, int newChunkY, int newChunkZ) {
@@ -266,7 +274,7 @@ std::vector<GLuint>& Chunk::GetDebugVisualizationIndices() {
 }
 
 unsigned int Chunk::GetMemoryUsage() {
-    totalMemoryUsage = (sizeof(Block) * totalBlocks) + (sizeof(Vertex) * vertices.size()) + (sizeof(GLuint) * indices.size());
+    totalMemoryUsage = (sizeof(Block) * totalBlocks) + (sizeof(Vertex) * vertices.size()) + (sizeof(GLuint) * indices.size()) + sizeof(Chunk);
     return totalMemoryUsage;
 }
 

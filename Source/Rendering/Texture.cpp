@@ -1,6 +1,5 @@
 #include <Texture.h>
-#include <stb_image.h>
-#include <debug-trap.h>
+
 
 Texture::Texture(const char* filepath, GLenum textureType, GLenum slot, GLenum format, GLenum pixelType) : atlasSize(0) {
 	OVERRIDE_LOG_NAME("Texture Loading");
