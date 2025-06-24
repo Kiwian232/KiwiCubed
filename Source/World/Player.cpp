@@ -38,9 +38,14 @@ void Player::Update() {
 	}
 
 	if (camera->GetWindow().isFocused) {
+		EntityData oldEntityData = entityData;
 		QueryInputs();
 		QueryMouseInputs();
 		ApplyPhysics(*this, chunkHandler, entityData.applyGravity, entityData.applyCollision);
+
+		if (oldEntityData.globalChunkPosition != entityData.globalChunkPosition) {
+			EventManager::GetInstance().TriggerEvent("EntityMovedChunk", make_pair("globalChunkPosition", std::any(entityData.globalChunkPosition)));
+		}
 	}
 }
 

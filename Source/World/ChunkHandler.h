@@ -103,7 +103,7 @@ class Chunk {
         void SetupRenderComponents();
         void AllocateChunk();
         void GenerateBlocks(World& world, Chunk& callerChunk, bool updateCallerChunk, bool debug);
-        void GenerateMesh(ChunkHandler& chunkHandler, const bool remesh);
+        bool GenerateMesh(ChunkHandler& chunkHandler, const bool remesh);
         void Render();
 
         void SetPosition(int newChunkX, int newChunkY, int newChunkZ);
@@ -159,7 +159,7 @@ class ChunkHandler {
         Chunk& AddChunk(int chunkX, int chunkY, int chunkZ);
         bool GetChunkExists(int chunkX, int chunkY, int chunkZ);
         void GenerateChunk(int chunkX, int chunkY, int chunkZ, Chunk callerChunk, bool updateCallerChunk, bool debug);
-        void MeshChunk(int chunkX, int chunkY, int chunkZ);
+        bool MeshChunk(int chunkX, int chunkY, int chunkZ);
         void SmartGenerateAndMeshChunk(int chunkX, int chunkY, int chunkZ);
         void ForceGenerateAndMeshChunk(int chunkX, int chunkY, int chunkZ);
         void RemeshChunk(int chunkX, int chunkY, int chunkZ, bool updateNeighbors);

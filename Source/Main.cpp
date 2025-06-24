@@ -37,6 +37,7 @@ extern "C"
 #include <imgui_impl_opengl3.h>
 #include <nlohmann/json.hpp>
 
+#include "Entity.h"
 #include "Events.h"
 #include "DebugRenderer.h"
 #include "Input.h"

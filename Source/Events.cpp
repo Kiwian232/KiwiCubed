@@ -9,7 +9,8 @@ EventManager& EventManager::GetInstance() {
     return instance;
 }
 
-void EventManager::RegisterEvent(std::string eventName) {
+void EventManager::RegisterEvent(const std::string& eventName) {
+    OVERRIDE_LOG_NAME("Events");
     if (eventMap.find(eventName) != eventMap.end()) {
         WARN("Tried to register event \"" + eventName + "\" twice");
         return;
@@ -20,7 +21,7 @@ void EventManager::RegisterEvent(std::string eventName) {
     eventMap.insert({eventName, event});
 }
 
-void EventManager::UnregisterEvent(std::string eventName) {
+void EventManager::UnregisterEvent(const std::string& eventName) {
     OVERRIDE_LOG_NAME("Events");
     auto it = std::remove_if(registeredEvents.begin(), registeredEvents.end(),
         [&eventName](const Event& event) { return event.eventName == eventName; });
@@ -31,33 +32,29 @@ void EventManager::UnregisterEvent(std::string eventName) {
     eventMap.erase(eventName);
 }
 
-void EventManager::TriggerEvent(std::string eventName) {
+void EventManager::AddEventToDo(const std::string& eventName, std::function<void(Event&)> eventTodo) {
+    OVERRIDE_LOG_NAME("Events");
     auto event = eventMap.find(eventName);
     if (event != eventMap.end()) {
-        event->second->TriggerEvent();
+        event->second->AddToDo(std::move(eventTodo));
     } else {
         WARN("Tried to trigger non-existent event \"" + eventName + "\"");
     }
 }
 
-void EventManager::AddEventToDo(std::string eventName, std::function<void()> eventTodo) {
-    auto event = eventMap.find(eventName);
-    if (event != eventMap.end()) {
-        event->second->AddToDo(eventTodo);
-    } else {
-        WARN("Tried to trigger non-existent event \"" + eventName + "\"");
-    }
-}
-
-Event::Event(std::string eventName) : eventName(std::move(eventName)) {}
 Event::~Event() = default;
+
+void Event::SetData(const std::string& key, std::any data) {
+    eventData[key] = std::move(data);
+}
 
 void Event::TriggerEvent() {
     for (unsigned int i = 0; i < eventToDo.size(); i++) {
-        eventToDo[i]();
+        eventToDo[i](*this);
     }
+    eventData.clear();
 }
 
-void Event::AddToDo(std::function<void()> todo) {
-    eventToDo.emplace_back(todo);
+void Event::AddToDo(std::function<void(Event&)> todo) {
+    eventToDo.emplace_back(std::move(todo));
 }

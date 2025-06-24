@@ -131,10 +131,55 @@ void World::GenerateChunk(int chunkX, int chunkY, int chunkZ, Chunk& chunk, bool
     }
 }
 
+void World::GenerateChunksAroundPosition(Event& event, unsigned short horizontalRadius, unsigned short verticalRadius) {
+    if (horizontalRadius == 0) {
+        horizontalRadius = playerChunkGenerationRadius;
+    }
+    auto* playerChunkPosition = event.GetData<glm::ivec3>("globalChunkPosition");
+    if (playerChunkPosition == nullptr) {
+        return;
+    }
+
+    for (int chunkX = playerChunkPosition->x - horizontalRadius; chunkX < playerChunkPosition->x + horizontalRadius; ++chunkX) {
+        for (int chunkY = playerChunkPosition->y - verticalRadius; chunkY < playerChunkPosition->y + verticalRadius; ++chunkY) {
+            for (int chunkZ = playerChunkPosition->z - horizontalRadius; chunkZ < playerChunkPosition->z + horizontalRadius; ++chunkZ) {
+                std::tuple<int, int, int> chunkPosition = {chunkX, chunkY, chunkZ};
+                Chunk& chunk = chunkHandler.GetChunk(chunkX, chunkY, chunkZ, false);
+                if (chunkHandler.GetChunkExists(chunkX, chunkY, chunkZ) && chunk.generationStatus == 2 && (!chunk.isEmpty) && (!chunk.isFull)) {
+                    if (chunkMeshingSet.find(chunkPosition) == chunkMeshingSet.end()) {
+                        chunkMeshingSet.insert(chunkPosition);
+                        chunkMeshingQueue.push(glm::ivec3(chunkX, chunkY, chunkZ));
+                        meshingQueuedChunks++;
+                    }
+                } else {
+                    if (chunkGenerationSet.find(chunkPosition) == chunkGenerationSet.end()) {
+                        chunkGenerationSet.insert(chunkPosition);
+                        chunkGenerationQueue.push(glm::ivec3(chunkX, chunkY, chunkZ));
+                        generationQueuedChunks++;
+                    }
+                }
+            }
+        }
+    }
+}
+
 void World::Update() {
     player.Update();
 
-    generationQueuedChunks = chunkGenerationThreads.GetQueueSize();
+    if (generationQueuedChunks > 0) {
+        chunkHandler.AddChunk(chunkGenerationQueue.front().x, chunkGenerationQueue.front().y, chunkGenerationQueue.front().z);
+        chunkHandler.GenerateChunk(chunkGenerationQueue.front().x, chunkGenerationQueue.front().y, chunkGenerationQueue.front().z, defaultChunk, false, false);
+        chunkGenerationQueue.pop();
+        generationQueuedChunks--;
+    }
+
+    if (meshingQueuedChunks > 0) {
+        bool meshed = chunkHandler.MeshChunk(chunkMeshingQueue.front().x, chunkMeshingQueue.front().y, chunkMeshingQueue.front().z);
+        if (meshed) {
+            chunkMeshingQueue.pop();
+            meshingQueuedChunks--;
+        }
+    }
 }
 
 // Pass 0 for world ImGui, 1 for chunk ImGui...
@@ -144,8 +189,19 @@ void World::DisplayImGui(unsigned int option) {
         ImGui::Text("Total chunks: %d", totalChunks);
         ImGui::Text("Memory usage: %.2f MB", totalMemoryUsage / (1024.0 * 1024.0));
         if (ImGui::CollapsingHeader("Chunk Generation Queue")) {
-            for (auto iterator = chunkGenerationQueue.begin(); iterator != chunkGenerationQueue.end(); ++iterator) {
-                ImGui::Text("{%d, %d, %d}", iterator->second.x, iterator->second.y, iterator->second.z);
+            std::queue<glm::ivec3> temporaryQueue = chunkGenerationQueue;
+            while (!temporaryQueue.empty()) {
+                const glm::ivec3& pos = temporaryQueue.front();
+                ImGui::Text("{%d, %d, %d}", pos.x, pos.y, pos.z);
+                temporaryQueue.pop();
+            }
+        }
+        if (ImGui::CollapsingHeader("Chunk Meshing Queue")) {
+            std::queue<glm::ivec3> temporaryQueue = chunkMeshingQueue;
+            while (!temporaryQueue.empty()) {
+                const glm::ivec3& pos = temporaryQueue.front();
+                ImGui::Text("{%d, %d, %d}", pos.x, pos.y, pos.z);
+                temporaryQueue.pop();
             }
         }
     }

@@ -57,8 +57,8 @@ void ChunkHandler::GenerateChunk(int chunkX, int chunkY, int chunkZ, Chunk calle
     GetChunk(chunkX, chunkY, chunkZ, false).GenerateBlocks(world, callerChunk, updateCallerChunk, debug);
 }
 
-void ChunkHandler::MeshChunk(int chunkX, int chunkY, int chunkZ) {
-    GetChunk(chunkX, chunkY, chunkZ, false).GenerateMesh(*this, false);
+bool ChunkHandler::MeshChunk(int chunkX, int chunkY, int chunkZ) {
+    return GetChunk(chunkX, chunkY, chunkZ, false).GenerateMesh(*this, false);
 }
 
 // Specifically uses the world's GenerateChunk() function that makes sure chunks mesh correctly

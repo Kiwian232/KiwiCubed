@@ -7,6 +7,7 @@
 #include <chrono>
 #include <map>
 #include <thread>
+#include <unordered_set>
 #include <vector>
 
 #include <glm/gtx/extend.hpp>
@@ -33,6 +34,7 @@ class World {
 		float totalMemoryUsage;
 
 		unsigned int generationQueuedChunks = 0;
+		unsigned int meshingQueuedChunks = 0;
 
 		World() : totalChunks(0), totalMemoryUsage(0), singleplayerHandler(singleplayerHandler), shouldTick(false), tickIntervalMs(50), worldSize(5), chunkHandler(*this) {}
 		World(unsigned int worldSize, SingleplayerHandler* singleplayerHandler);
@@ -43,6 +45,8 @@ class World {
 		void Render(Shader shaderProgram);
 		void GenerateWorld();
 		void GenerateChunk(int chunkX, int chunkY, int chunkZ, Chunk& chunk, bool updateCallerChunk, Chunk& callerChunk);
+
+		void GenerateChunksAroundPosition(Event& event, unsigned short horizontalRadius = 0, unsigned short verticalRadius = 1);
 
 		void Update();
 
@@ -74,8 +78,11 @@ class World {
 		unsigned int ticksPerSecond = 0;
 		std::chrono::steady_clock::time_point tpsStartTime = std::chrono::high_resolution_clock::now();
 
-		std::unordered_map<std::tuple<int, int, int>, glm::ivec3, TripleHash> chunkGenerationQueue;
-		unsigned short playerChunkGenerationRadius = 1;
+		std::queue<glm::ivec3> chunkGenerationQueue;
+		std::unordered_set<std::tuple<int, int, int>, TripleHash> chunkGenerationSet;
+		std::queue<glm::ivec3> chunkMeshingQueue;
+		std::unordered_set<std::tuple<int, int, int>, TripleHash> chunkMeshingSet;
+		unsigned short playerChunkGenerationRadius = 2;
 
 		ThreadPool chunkGenerationThreads = ThreadPool(4);
 

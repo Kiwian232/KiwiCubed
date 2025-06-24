@@ -78,21 +78,30 @@ void Block::GenerateBlock(unsigned short blockX, unsigned short blockY, unsigned
 
 	int newChunkSize = static_cast<int>(chunkSize);
 
-	float density = noise.GetNoise(
+	/*float density = noise.GetNoise(
 		static_cast<float>(blockX + (chunkX * newChunkSize)),
 		static_cast<float>(blockY + (chunkY * newChunkSize)),
 		static_cast<float>(blockZ + (chunkZ * newChunkSize))
-	);
+	);*/
 
-	if (density > 0) {
-		blockID = blockManager.GetBlockID("kiwicubed", "stone");
+	float density = noise.GetNoise(static_cast<float>(blockX + (chunkX * newChunkSize)), static_cast<float>(blockZ + (chunkZ * newChunkSize)));
+	if (blockY + (chunkY * newChunkSize) < ((density + 1) / 2) * 10) {
 		blockID = 1;
 		variant = rand() % 4;
 	} else {
 		blockID = 0;
-		//blockID = 0;
 		variant = 0;
 	}
+
+	//if (density > 0) {
+	//	blockID = blockManager.GetBlockID("kiwicubed", "stone");
+	//	blockID = 1;
+	//	variant = rand() % 4;
+	//} else {
+	//	blockID = 0;
+	//	//blockID = 0;
+	//	variant = 0;
+	//}
 
 	//blockID = 0;
 	//variant = 0;

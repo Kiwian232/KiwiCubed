@@ -3,6 +3,12 @@
 
 void SingleplayerHandler::Setup() {
 	singleplayerWorld.Setup(window);
+
+	EventManager& eventManager = EventManager::GetInstance();
+	eventManager.RegisterEvent("EntityMovedChunk");
+	eventManager.AddEventToDo("EntityMovedChunk", [&](Event& event) {
+		singleplayerWorld.GenerateChunksAroundPosition(event);
+	});
 }
 
 void SingleplayerHandler::StartSingleplayerWorld() {
