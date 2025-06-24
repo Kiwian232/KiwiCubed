@@ -98,8 +98,6 @@ class Chunk {
         Chunk() {}
         Chunk(int chunkX, int chunkY, int chunkZ) : chunkX(chunkX), chunkY(chunkY), chunkZ(chunkZ), isEmpty(false) {}
 
-
-
         void SetupRenderComponents();
         void AllocateChunk();
         void GenerateBlocks(World& world, Chunk& callerChunk, bool updateCallerChunk, bool debug);
@@ -110,6 +108,8 @@ class Chunk {
     
         int GetTotalBlocks() const;
         void SetTotalBlocks(unsigned short newTotalBlocks);
+
+        bool GetMeshable(ChunkHandler& chunkHandler) const;
     
         std::vector<GLfloat>& GetVertices();
         std::vector<GLuint>& GetIndices();

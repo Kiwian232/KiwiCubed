@@ -263,6 +263,21 @@ void Chunk::SetTotalBlocks(unsigned short newTotalBlocks) {
     totalBlocks = newTotalBlocks;
 }
 
+bool Chunk::GetMeshable(ChunkHandler& chunkHandler) const {
+    if (!isAllocated || !isGenerated || isEmpty || isFull) {
+        return false;
+    } else {
+        Chunk& positiveXChunk = chunkHandler.GetChunk(chunkX + 1, chunkY, chunkZ, false);
+        Chunk& negativeXChunk = chunkHandler.GetChunk(chunkX - 1, chunkY, chunkZ, false);
+        Chunk& positiveYChunk = chunkHandler.GetChunk(chunkX, chunkY + 1, chunkZ, false);
+        Chunk& negativeYChunk = chunkHandler.GetChunk(chunkX, chunkY - 1, chunkZ, false);
+        Chunk& positiveZChunk = chunkHandler.GetChunk(chunkX, chunkY, chunkZ + 1, false);
+        Chunk& negativeZChunk = chunkHandler.GetChunk(chunkX, chunkY, chunkZ - 1, false);
+
+        return positiveXChunk.isGenerated && negativeXChunk.isGenerated && positiveYChunk.isGenerated && negativeYChunk.isGenerated && positiveZChunk.isGenerated && negativeZChunk.isGenerated;
+    }
+}
+
 std::vector<GLfloat>& Chunk::GetVertices() {
     return vertices;
 }

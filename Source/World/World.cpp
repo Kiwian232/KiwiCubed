@@ -135,6 +135,9 @@ void World::GenerateChunksAroundPosition(Event& event, unsigned short horizontal
     if (horizontalRadius == 0) {
         horizontalRadius = playerChunkGenerationRadius;
     }
+    if (verticalRadius == 0) {
+        verticalRadius = playerChunkGenerationRadius;
+    }
     auto* playerChunkPosition = event.GetData<glm::ivec3>("globalChunkPosition");
     if (playerChunkPosition == nullptr) {
         return;
@@ -145,7 +148,7 @@ void World::GenerateChunksAroundPosition(Event& event, unsigned short horizontal
             for (int chunkZ = playerChunkPosition->z - horizontalRadius; chunkZ < playerChunkPosition->z + horizontalRadius; ++chunkZ) {
                 std::tuple<int, int, int> chunkPosition = {chunkX, chunkY, chunkZ};
                 Chunk& chunk = chunkHandler.GetChunk(chunkX, chunkY, chunkZ, false);
-                if (chunkHandler.GetChunkExists(chunkX, chunkY, chunkZ) && chunk.generationStatus == 2 && (!chunk.isEmpty) && (!chunk.isFull)) {
+                if (chunkHandler.GetChunkExists(chunkX, chunkY, chunkZ) && chunk.GetMeshable(chunkHandler) && chunk.generationStatus != 3) {
                     if (chunkMeshingSet.find(chunkPosition) == chunkMeshingSet.end()) {
                         chunkMeshingSet.insert(chunkPosition);
                         chunkMeshingQueue.push(glm::ivec3(chunkX, chunkY, chunkZ));
@@ -164,7 +167,7 @@ void World::GenerateChunksAroundPosition(Event& event, unsigned short horizontal
 }
 
 void World::Update() {
-    player.Update();
+    //player.Update();
 
     if (generationQueuedChunks > 0) {
         chunkHandler.AddChunk(chunkGenerationQueue.front().x, chunkGenerationQueue.front().y, chunkGenerationQueue.front().z);
@@ -290,7 +293,9 @@ void World::Tick() {
             auto& chunk = iterator->second;
             totalMemoryUsage += chunk.GetMemoryUsage();
         }
-    }   
+    }
+
+    Update();
 
     if (duration >= 1000.0) {
         ticksPerSecond = static_cast<unsigned int>(static_cast<float>(totalTicks) / (duration / 1000.0));
@@ -311,7 +316,7 @@ void World::RunTickThread() {
 }
 
 void World::Delete() {
-    chunkHandler.Delete();
     StopTickThread();
+    chunkHandler.Delete();
     chunkGenerationThreads.Delete();
 }

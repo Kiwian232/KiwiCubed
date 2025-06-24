@@ -246,7 +246,7 @@ int main() {
 		// Do rendering stuff
 		globalWindow.QueryInputs();
 		if (singleplayerHandler.isLoadedIntoSingleplayerWorld) {
-			singleplayerHandler.singleplayerWorld.Update();
+			singleplayerHandler.singleplayerWorld.player.Update();
 			singleplayerHandler.singleplayerWorld.player.UpdateCameraMatrix(terrainShaderProgram);
 			singleplayerHandler.singleplayerWorld.player.UpdateCameraMatrix(wireframeShaderProgram);
 			singleplayerHandler.singleplayerWorld.player.UpdateCameraMatrix(chunkDebugShaderProgram);

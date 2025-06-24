@@ -85,7 +85,7 @@ void Block::GenerateBlock(unsigned short blockX, unsigned short blockY, unsigned
 	);*/
 
 	float density = noise.GetNoise(static_cast<float>(blockX + (chunkX * newChunkSize)), static_cast<float>(blockZ + (chunkZ * newChunkSize)));
-	if (blockY + (chunkY * newChunkSize) < ((density + 1) / 2) * 10) {
+	if (blockY + (chunkY * newChunkSize) < (density + 1) * 30) {
 		blockID = 1;
 		variant = rand() % 4;
 	} else {
