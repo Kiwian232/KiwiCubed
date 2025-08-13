@@ -1,7 +1,6 @@
 #include "Shader.h"
 #include <debug-trap.h>
 #include <string>
-#include <winnt.h>
 #include <klogger.hpp>
 
 Shader::Shader(const std::string& vertexFilePath, const std::string& fragmentFilePath) {

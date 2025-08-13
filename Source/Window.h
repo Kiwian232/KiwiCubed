@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 
 #include <chrono>
+#include <cstring>
 #include <iostream>
 #include <thread>
 

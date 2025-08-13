@@ -2,14 +2,17 @@ set windows-shell := ['cmd', '/c']
 
 [unix]
 run: build
-	build/kiwicubed
+	Build/kiwicubed
 
 [windows]
 run: build
-	build\kiwicubed.exe
+	Build\kiwicubed.exe
 
 build:
-	meson compile -C build
+	meson compile -C Build
+
+setup:
+	meson setup Build
 	
 clean:
-	meson setup --reconfigure build
+	meson setup --reconfigure Build

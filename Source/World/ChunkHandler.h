@@ -14,7 +14,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "ImGui.h"
+#include "imgui.h"
 
 #include "Block.h"
 #include "IndexBufferObject.h"

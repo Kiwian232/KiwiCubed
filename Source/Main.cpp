@@ -4,22 +4,6 @@
 
 bool bitness;
 
-// Make it so on laptops, it will request the dGPU if possible, without this, you have to force it to use the dGPU
-#ifdef __linux__
-// For NVIDIA GPUs
-std::setenv("__NV_PRIME_RENDER_OFFLOAD", "1", 1);
-std::setenv("__GLX_VENDOR_LIBRARY_NAME", "nvidia", 1);
-
-// For AMD GPUs
-std::setenv("DRI_PRIME", "1", 1);
-#elif _WIN32
-extern "C"
-{
-	__declspec(dllexport) unsigned long NvOptimusEnablement = 0x00000001; // For NVIDIA GPUs
-	__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;   // For AMD GPUs
-}
-#endif
-
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -63,6 +47,22 @@ std::string projectVersion;
 // This main function is getting out of hand
 // yes but hands are in pocket so is it still in the pocket or is it out of pocket? - Astra
 int main() {
+	// Make it so on laptops, it will request the dGPU if possible, without this, you have to force it to use the dGPU
+	#ifdef __linux__
+	// For NVIDIA GPUs
+	setenv("__NV_PRIME_RENDER_OFFLOAD", "1", 1);
+	setenv("__GLX_VENDOR_LIBRARY_NAME", "nvidia", 1);
+
+	// For AMD GPUs
+	setenv("DRI_PRIME", "1", 1);
+	#elif _WIN32
+	extern "C"
+	{
+		__declspec(dllexport) unsigned long NvOptimusEnablement = 0x00000001; // For NVIDIA GPUs
+		__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;   // For AMD GPUs
+	}
+	#endif
+
 	std::ifstream file("init_config.json");
 
 	OVERRIDE_LOG_NAME("Initialization");

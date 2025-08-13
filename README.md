@@ -10,4 +10,10 @@ Currently working on:
 
 ## Compiling
 
-Clone the repository, and run 'meson setup builddir' in the root folder, then 'just build' to compile. Linux and Mac are unsupported as of now.
+Clone the repository, and run ``just setup`` in the root. 
+
+### Linux
+If you're compiling for linux, for the time being, you'll need to go into ``subprojects/glad-gl-x.x-compatibility`` and edit the ``meson.build`` file. Remove the lines that check if you're running linux to stop the compilation.
+
+### Lastly
+Run ``just build`` in the root to build the project, and ``just run`` to quickly build and launch the project.

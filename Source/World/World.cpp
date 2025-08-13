@@ -285,7 +285,7 @@ bool World::StopTickThread() {
 void World::Tick() {
     std::lock_guard<std::mutex> lock(tickThreadMutex);
 
-    auto end_time = std::chrono::high_resolution_clock::now();
+    auto end_time = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - tpsStartTime).count();
     if (totalTicks == 1) {
         totalMemoryUsage = 0;

@@ -76,7 +76,7 @@ class World {
 		int tickIntervalMs = 50;
 		unsigned int totalTicks = 0;
 		unsigned int ticksPerSecond = 0;
-		std::chrono::steady_clock::time_point tpsStartTime = std::chrono::high_resolution_clock::now();
+		std::chrono::steady_clock::time_point tpsStartTime = std::chrono::steady_clock::now();
 
 		std::queue<glm::ivec3> chunkGenerationQueue;
 		std::unordered_set<std::tuple<int, int, int>, TripleHash> chunkGenerationSet;
